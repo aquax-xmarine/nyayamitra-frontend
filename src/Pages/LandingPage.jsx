@@ -1,28 +1,37 @@
 import React from "react";
 import backgroundImage from "../assets/LandingPageImage.png";
 import logo from "../assets/logo.png";
+import { useNavigate } from "react-router-dom";
 
-const App = () => {
+
+const LandingPage = () => {
+  const navigate = useNavigate();
   return (
     <div className="w-screen h-screen relative bg-white">
 
       {/* Navbar */}
-      <nav className="w-full absolute top-0 left-0 flex justify-between items-center z-50 border border-gray-300 pb-1.5 pt-1.5">
+      <nav className="w-full absolute top-0 left-0 flex flex-nowrap justify-between items-center z-50 border border-gray-300 pb-1.5 pt-1.5">
 
         {/* Logo + Title */}
         <div className="flex items-center gap-3">
-          <img src={logo} alt="Logo" className="w-8 h-7 border border-black rounded-[7px] p-0.5 ml-8" />
+          <img src={logo} alt="Logo" className="w-8 h-7 border border-black rounded-[7px] ml-8" />
           <p className="text-black text-[17px] font-medium">NYAYAMITRA</p>
         </div>
 
 
         {/* Log in + Sign up */}
         <div className="flex items-center gap-5 mr-8 text-[10px]">
-          <button className="bg-white text-black font-normal">Log in</button>
-          <button className=" bg-black text-white font-normal">
+          <button
+            className="bg-white text-black font-normal px-3 py-1" 
+            onClick={() => navigate("/login")}
+            >
+              Log in
+              </button>
+
+          <button className=" bg-black text-white font-normal hidden sm:block">
             Sign up for free
           </button>
-        </div> 
+        </div>
 
       </nav>
 
@@ -31,7 +40,7 @@ const App = () => {
       {/* Background image */}
       <div
         className="absolute inset-0 bg-center bg-cover"
-        style={{ backgroundImage: `url(${backgroundImage})` }}
+        style={{ backgroundImage: `url(${backgroundImage})`, backgroundPosition: "center 40%" }}
       ></div>
 
 
@@ -57,4 +66,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default LandingPage;
