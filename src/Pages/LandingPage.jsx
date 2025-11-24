@@ -1,4 +1,3 @@
-import React from "react";
 import backgroundImage from "../assets/LandingPageImage.png";
 import logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +27,9 @@ const LandingPage = () => {
               Log in
               </button>
 
-          <button className=" bg-black text-white font-normal hidden sm:block">
+          <button className=" bg-black text-white font-normal hidden sm:block"
+          onClick={() => navigate("/signUp")}
+          >
             Sign up for free
           </button>
         </div>

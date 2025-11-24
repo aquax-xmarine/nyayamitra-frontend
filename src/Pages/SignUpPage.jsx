@@ -1,11 +1,12 @@
-
-import backgroundImage from "../assets/login-signup.jpg";import logo from "../assets/logo.png";
+import React from "react";
+import backgroundImage from "../assets/login-signup.jpg";
+import logo from "../assets/logo.png";
 import back_button from "../assets/back.png";
-import LoginCard from "../component/LoginBox";
+import SignUpCard from "../component/SignupBox";
 import { useNavigate } from "react-router-dom";
 
 
-const Login = () => {
+const SignUp = () => {
   const navigate = useNavigate();
   return (
     <div className="flex h-screen bg-blue-600 overflow-hidden">
@@ -39,7 +40,7 @@ const Login = () => {
           <button className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity z-30"
             onClick={() => navigate("/")}
             style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#A39E9E' }}
-            
+
           >
             <img src={back_button} alt="Back" className="w-4 h-4" />
             Back to Website
@@ -70,11 +71,11 @@ const Login = () => {
 
       <div className="sm:w-11/12 md:w-2/3 lg:w-1/2 xl:w-3/7 relative h-screen flex items-center justify-center">
 
-        <LoginCard />
+        <SignUpCard />
 
       </div>
     </div>
   );
 };
 
-export default Login;
+export default SignUp;
