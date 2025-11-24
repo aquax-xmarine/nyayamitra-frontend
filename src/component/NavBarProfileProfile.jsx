@@ -1,25 +1,59 @@
 import cat from "../assets/car.jpg";
-import { SlArrowDown } from "react-icons/sl";
+import { SlArrowDown, SlArrowUp} from "react-icons/sl";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 export default function LoginNavbarProfile() {
+    const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+    const navigate = useNavigate();
 
     return (
 
         <div className="flex items-center justify-start p-2 w-40">
             <div className="h-9 w-9">
                 <img
-                src={cat}
-                alt="profile"
-                className="w-full h-full object-cover rounded-full"
+                    src={cat}
+                    alt="profile"
+                    className="w-full h-full object-cover rounded-full"
                 />
             </div>
 
             <button
-            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#000000' }}
+            className="z-50"
+                onClick={() => setIsOverlayOpen(!isOverlayOpen)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#000000'}}
             >
-                <SlArrowDown />
+                {isOverlayOpen ? <SlArrowUp /> : <SlArrowDown />}
             </button>
+
+            {/* Overlay Button */}
+            {isOverlayOpen && (
+                <>
+                    {/* Background overlay to close when clicking outside */}
+                    <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsOverlayOpen(false)}
+                    />
+
+                    {/* The actual button */}
+                    <div className="absolute right-2 top-12 z-50">
+                        <button
+                            onClick={() => {
+                                navigate("/")
+                                setIsOverlayOpen(false);
+                            }}
+                            className="bg-white border border-gray-300 rounded-lg px-2 py-2 shadow-lg hover:bg-gray-50"
+                            style={{ border: 'none', borderRadius: '7px', background: '#000000', outline: 'none', fontSize: '11px', color: '#FFFFFF', marginTop: '10px', marginRight: '20px'}}
+
+                        >
+                            Log out
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
-  );
+    );
 };
+
+
