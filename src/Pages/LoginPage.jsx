@@ -1,5 +1,6 @@
 
-import backgroundImage from "../assets/login-signup.jpg";import logo from "../assets/logo.png";
+import backgroundImage from "../assets/login-signup.jpg";
+import logo from "../assets/logo.png";
 import back_button from "../assets/back.png";
 import LoginCard from "../component/LoginBox";
 import { useNavigate } from "react-router-dom";
