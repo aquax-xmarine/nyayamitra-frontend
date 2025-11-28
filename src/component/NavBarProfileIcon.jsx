@@ -10,7 +10,7 @@ export default function LoginNavbarIcon() {
                 <img
                     src={logo}
                     alt="logo"
-                    onClick={() => window.location.href = '/'}
+                    //onClick={() => window.location.href = '/'}
                     className="w-8 h-7 object-contain border border-black rounded-[7px] cursor-pointer"
                 />
             </div>

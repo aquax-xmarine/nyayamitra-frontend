@@ -8,6 +8,9 @@ export default function EditProfile() {
   const [formData, setFormData] = useState({
     name: ''
   });
+  const [originalData, setOriginalData] = useState({
+    name: ''
+  });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -18,9 +21,11 @@ export default function EditProfile() {
   // Load user data when component mounts
   useEffect(() => {
     if (user) {
-      setFormData({
+      const userData = {
         name: user.name || ''
-      });
+      };
+      setFormData(userData);
+      setOriginalData(userData);
     }
   }, [user]);
 
@@ -44,6 +49,17 @@ export default function EditProfile() {
       return () => clearInterval(interval);
     }
   }, [message]);
+
+  // Check if there are any changes
+  const hasChanges = () => {
+    // Check if name has changed
+    const nameChanged = formData.name.trim() !== originalData.name.trim();
+    
+    // Check if a new photo was selected
+    const photoChanged = selectedFile !== null;
+    
+    return nameChanged || photoChanged;
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -107,6 +123,11 @@ export default function EditProfile() {
       // Then update the profile name
       const response = await userAPI.updateProfile(formData);
       updateUser(response.user); // Update user in AuthContext
+      
+      // Update original data to reflect the saved state
+      setOriginalData({
+        name: formData.name
+      });
       
       // Clear the selected file and preview after successful save
       setSelectedFile(null);
@@ -245,7 +266,7 @@ export default function EditProfile() {
       <div className="flex justify-center">
         <button
           onClick={handleSave}
-          disabled={loading}
+          disabled={loading || !hasChanges()}
           className="px-8 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ border: 'none', borderRadius: '7px', backgroundColor: '#000000', outline: 'none', fontSize: '11px', color: '#FFFFFF', padding: '7px 20px', fontWeight: 'normal' }}
         >

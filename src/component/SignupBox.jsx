@@ -130,12 +130,12 @@ export default function SignUpCard() {
 
 
   return (
-    <div className="flex items-center justify-center p-8">
-      <div className="w-[450px] bg-white rounded-3xl shadow-lg px-20 py-12 pt-1 pb-1">
+    <div className="flex items-center justify-center">
+      <div className="w-[450px] bg-white rounded-3xl shadow-lg px-20 py-1 pt-0 pb-0">
 
         {/* Header */}
-        <div className="mb-8 pt-12">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-4 pt-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
             Welcome!
           </h1>
           <p className="text-gray-600 text-[11px]">
@@ -157,7 +157,7 @@ export default function SignUpCard() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-semibold text-gray-900 mb-2"
+              className="block text-sm font-semibold text-gray-900 mb-1"
             >
               Email
             </label>
@@ -187,7 +187,7 @@ export default function SignUpCard() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-semibold text-gray-900 mb-2"
+              className="block text-sm font-semibold text-gray-900 mb-1"
             >
               Password
             </label>
@@ -230,13 +230,7 @@ export default function SignUpCard() {
                 <p className={`text-xs ${passwordStrength.color} font-semibold`}>
                   Password strength: {passwordStrength.text}
                 </p>
-                <div className="flex gap-1 mt-1">
-                  <div className={`h-1 flex-1 rounded ${password.length >= 8 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <div className={`h-1 flex-1 rounded ${/[A-Z]/.test(password) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <div className={`h-1 flex-1 rounded ${/[a-z]/.test(password) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <div className={`h-1 flex-1 rounded ${/[0-9]/.test(password) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <div className={`h-1 flex-1 rounded ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                </div>
+                
                 <p className="text-[10px] text-gray-500 mt-1">
                   Must have: 8+ characters, uppercase, lowercase, number, special character
                 </p>
@@ -252,7 +246,7 @@ export default function SignUpCard() {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-sm font-semibold text-gray-900 mb-2"
+              className="block text-sm font-semibold text-gray-900 mb-1"
             >
               Confirm Password
             </label>
@@ -315,7 +309,7 @@ export default function SignUpCard() {
         </div>
 
         {/* Sign Up Link */}
-        <div className="text-center mt-6 pb-12">
+        <div className="text-center mt-4 pb-8">
           <p className="text-xs text-gray-600">
             Already a member?{' '}
             <button
