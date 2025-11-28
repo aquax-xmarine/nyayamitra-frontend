@@ -182,7 +182,6 @@ export default function LoginCard() {
                 onMouseEnter={(e) => e.currentTarget.style.color = '#374151'}
                 onMouseLeave={(e) => e.currentTarget.style.color = '#A39E9E'}
               >
-                Forgot Password?
               </button>
             </div>
           </div>
