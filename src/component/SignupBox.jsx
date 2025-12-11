@@ -112,7 +112,7 @@ export default function SignUpCard() {
     try {
       // Call the actual signup function from AuthContext
       await signup(email, password, name || email.split('@')[0]); // Use email username as name if no name field
-      navigate('/profile'); // Navigate to profile or dashboard after successful signup
+      navigate('/onboarding'); // Navigate to profile or dashboard after successful signup
     } catch (err) {
       // Handle specific error messages from backend
       const errorMessage = err.response?.data?.error || 'Registration failed';

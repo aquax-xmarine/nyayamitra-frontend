@@ -1,7 +1,7 @@
 import axios from 'axios';
-import API_URL from '../config/api'; // ← Add this import
+import API_URL from '../config/api';
 
-const API_BASE_URL = `${API_URL}/api`;  // ← Use environment variable
+const API_BASE_URL = `${API_URL}/api`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -78,5 +78,61 @@ export const userAPI = {
     return response.data;
   }
 };
+
+// Lawyer specific APIs
+export const lawyerAPI = {
+  // Get all provinces
+  getProvinces: async () => {
+    const response = await api.get('/lawyer/provinces');
+    return response.data;
+  },
+
+  // Get districts by province ID
+  getDistricts: async (provinceId) => {
+    const response = await api.get(`/lawyer/districts/${provinceId}`);
+    return response.data;
+  },
+
+  // Get all practice areas
+  getPracticeAreas: async () => {
+    const response = await api.get('/lawyer/practice-areas');
+    return response.data;
+  },
+
+  // Get high court for a district
+  getHighCourt: async (districtName) => {
+    const response = await api.get(`/lawyer/high-court/${districtName}`);
+    return response.data;
+  },
+
+  // Get logged-in lawyer's profile
+  getProfile: async () => {
+    const response = await api.get('/lawyer/profile');
+    return response.data;
+  },
+
+  // Update lawyer profile
+  updateProfile: async (data) => {
+    const response = await api.put('/lawyer/profile', data);
+    return response.data;
+  },
+
+  // Get lawyer profile by ID
+  getProfileById: async (userId) => {
+    const response = await api.get(`/lawyer/profile/${userId}`);
+    return response.data;
+  },
+
+  // Search lawyers by district and/or practice area
+  searchLawyers: async (filters) => {
+    const params = new URLSearchParams();
+    if (filters.district) params.append('district', filters.district);
+    if (filters.practiceArea) params.append('practiceArea', filters.practiceArea);
+    
+    const response = await api.get(`/lawyer/search?${params.toString()}`);
+    return response.data;
+  }
+};
+// End of Lawyer specific APIs
 
 export default api;
