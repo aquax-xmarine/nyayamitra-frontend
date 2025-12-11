@@ -1,5 +1,5 @@
 // SkipPersonalization.jsx
-export default function SkipPersonalization({ onClose, onConfirm }) {
+export default function SkipPersonalization({ onClose, onSkip }) {
   return (
     <div
       style={{
@@ -31,8 +31,8 @@ export default function SkipPersonalization({ onClose, onConfirm }) {
 
         {/* New explanatory text */}
         <p className="text-gray-600 text-[12px] mb-5 leading-[1.4]">
-          Any changes you’ve made so far will be discarded, but you can always
-          edit them later in your profile page.
+          You can always complete the remaining steps later in your profile settings. 
+
         </p>
 
         {/* Horizontal button wrapper */}
@@ -46,15 +46,15 @@ export default function SkipPersonalization({ onClose, onConfirm }) {
         >
           <button
             className="py-2 bg-black text-white rounded"
-            style={{ fontSize: "15px", borderRadius: "10px", padding: "6px 20px"}}
-            onClick={onConfirm}
+            style={{ fontSize: "15px", borderRadius: "10px", padding: "6px 20px" }}
+            onClick={onSkip}
           >
             Skip
           </button>
 
           <button
             className="py-2 bg-gray-200 rounded"
-            style={{ fontSize: "15px", borderRadius: "10px",  padding: "6px 10px"}}
+            style={{ fontSize: "15px", borderRadius: "10px", padding: "6px 10px" }}
             onClick={onClose}
           >
             Cancel

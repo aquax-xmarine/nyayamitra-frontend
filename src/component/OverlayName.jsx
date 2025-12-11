@@ -1,12 +1,14 @@
 import ProfileAvatar from "../component/ProfileAvatar";
-import { useAuth } from "../context/AuthContext";
 import firstStar from "../assets/firstStar.png";
 import editIcon from "../assets/editNameIcon.png";
+
 import SkipPersonalization from "../component/SkipPersonalization";
 import EditNamePopup from "../component/EditNamePopup";
-import { useState } from "react";
 
-export default function OverlayName({ onClick }) {
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+
+export default function OverlayName({ onClick, onSkip }) {
   const [showPopup, setShowPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
 
@@ -26,14 +28,23 @@ export default function OverlayName({ onClick }) {
   };
 
   return (
-    <div className="w-120 h-120 p-13 bg-white rounded-[15px] shadow-lg flex flex-col items-center">
-      {/*Six Stars Image */}
-      <img
-        src={firstStar}
-        alt="stars"
-        className="mb-4"
-        style={{ width: "200px", height: "auto" }}
-      />
+    <div className="w-120 h-120 p-13 pb-6 bg-white rounded-[15px] shadow-lg flex flex-col items-center">
+      {/* Back Button + Stars Row (matching OverlayLawyer structure) */}
+      <div className="flex items-center w-full mb-4">
+        
+        {/* Invisible spacer to match back button width */}
+        <div style={{ width: "20px", height: "20px" }}></div>
+
+        {/* Center Stars */}
+        <div className="flex-1 flex justify-center">
+          <img
+            src={firstStar}
+            alt="stars"
+            style={{ width: "200px", height: "auto" }}
+          />
+        </div>
+
+      </div>
 
       {/* Profile Picture */}
       <ProfileAvatar size={80} />
@@ -69,9 +80,12 @@ export default function OverlayName({ onClick }) {
         experience.
       </p>
 
+      {/* Spacer to push buttons to bottom */}
+      <div className="flex-1"></div>
+
       <button
-        className="w-90 mt-6 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-        style={{ borderRadius: "15px", padding: '5px', fontSize: "15px" }}
+        className="w-90 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+        style={{ borderRadius: "10px", padding: '5px', fontSize: "15px" }}
         onClick={onClick}
       >
         Next
@@ -97,9 +111,9 @@ export default function OverlayName({ onClick }) {
       {showPopup && (
         <SkipPersonalization
           onClose={() => setShowPopup(false)}
-          onConfirm={() => {
+          onSkip={() => {
             setShowPopup(false);
-            onClick();
+            onSkip();
           }}
         />
       )}
