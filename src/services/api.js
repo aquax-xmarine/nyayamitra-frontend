@@ -69,14 +69,20 @@ export const userAPI = {
   uploadProfilePicture: async (file) => {
     const formData = new FormData();
     formData.append('profilePicture', file);
-    
+
     const response = await api.post('/user/profile/picture', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
     return response.data;
-  }
+  },
+
+  // Add this new method
+  updateDisplayName: async (displayName) => {
+    const response = await api.put('/user/display-name', { displayName });
+    return response.data;
+  },
 };
 
 // Lawyer specific APIs
@@ -128,7 +134,7 @@ export const lawyerAPI = {
     const params = new URLSearchParams();
     if (filters.district) params.append('district', filters.district);
     if (filters.practiceArea) params.append('practiceArea', filters.practiceArea);
-    
+
     const response = await api.get(`/lawyer/search?${params.toString()}`);
     return response.data;
   }
