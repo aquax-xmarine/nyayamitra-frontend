@@ -6,10 +6,25 @@ import SkipPersonalization from "../component/SkipPersonalization";
 
 
 
+
 export default function OverlayPracticeArea({ onBack, onClick, onSkip }) {
     const [practiceAreas, setPracticeAreas] = useState([]);
     const [selectedAreas, setSelectedAreas] = useState([]);
     const [showPopup, setShowPopup] = useState(false);
+
+    const handleNext = async () => {
+        if (selectedAreas.length === 0) return;
+
+        try {
+            await lawyerAPI.savePracticeAreas(selectedAreas);
+            console.log("Practice areas saved successfully!");
+            onClick(selectedAreas); // move to next step
+        } catch (err) {
+            console.error("Failed to save practice areas:", err);
+            alert("Failed to save practice areas");
+        }
+    };
+
 
     // Fetch practice areas on load
     useEffect(() => {
@@ -92,7 +107,7 @@ export default function OverlayPracticeArea({ onBack, onClick, onSkip }) {
             <button
                 className="w-90 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ borderRadius: "10px", padding: "5px", fontSize: "15px" }}
-                onClick={() => onClick(selectedAreas)}
+                onClick={handleNext}
                 disabled={selectedAreas.length === 0}
             >
                 Next
@@ -121,7 +136,7 @@ export default function OverlayPracticeArea({ onBack, onClick, onSkip }) {
                     onSkip={() => {
                         setShowPopup(false);
                         onSkip();
-                        
+
                     }}
                 />
             )}

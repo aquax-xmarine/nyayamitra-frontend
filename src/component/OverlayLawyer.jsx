@@ -2,6 +2,8 @@ import secondStar from "../assets/secondStar.png";
 import backIcon from "../assets/backBlack.png";
 import { useState } from "react";
 import SkipPersonalization from "../component/SkipPersonalization";
+import { lawyerAPI } from "../services/api";
+
 
 export default function OverlayLawyer({ onBack, onClick, onSkip }) {
   const [showPopup, setShowPopup] = useState(false);
@@ -10,6 +12,19 @@ export default function OverlayLawyer({ onBack, onClick, onSkip }) {
   const handleLawyerChoice = (value) => {
     setSelectedOption(value);
   };
+
+  const handleNext = async () => {
+    if (selectedOption === null) return;
+
+    try {
+      await lawyerAPI.saveLawyerChoice(selectedOption);
+      console.log("Choice saved:", selectedOption);
+      onClick(); // go to next step
+    } catch (error) {
+      console.error("Failed to save lawyer choice:", error);
+    }
+  };
+
 
   return (
     <div className="w-120 h-120 p-13 pb-6 bg-white rounded-[15px] shadow-lg flex flex-col items-center">
@@ -81,7 +96,7 @@ export default function OverlayLawyer({ onBack, onClick, onSkip }) {
              disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ borderRadius: "10px", padding: "5px", fontSize: "15px" }}
         disabled={selectedOption === null}
-        onClick={onClick}
+        onClick={handleNext}
       >
         Next
       </button>

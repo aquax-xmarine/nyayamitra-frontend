@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Progress from "../assets/Progress.gif";
 import percent from "../assets/40percent.png";
 
-export default function OverlayPersonalizationIncomplete() {
+export default function OverlayPersonalizationIncomplete({onBack}) {
     const [showPercent, setShowPercent] = useState(false);
 
     // Run only once on mount
@@ -18,7 +18,13 @@ export default function OverlayPersonalizationIncomplete() {
 
     return (
         <div className="w-120 h-120 p-13 pb-6 bg-white rounded-[15px] shadow-lg flex flex-col items-center">
-
+            <img
+                src={backIcon}
+                alt="back"
+                className="cursor-pointer"
+                style={{ width: "20px", height: "20px" }}
+                onClick={onBack}
+            />
             {/* Stars */}
             <div className="flex items-center w-full mb-4">
                 <div className="flex-1 flex justify-center">
@@ -64,7 +70,7 @@ export default function OverlayPersonalizationIncomplete() {
             {/* Next Button */}
             <button
                 className="w-90 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                style={{ borderRadius: "10px", padding: "5px", fontSize: "15px" }}
+                style={{ borderRadius: "10px", padding: "5px", fontSize: "15px", fontWeight: 'normal' }}
 
             >
                 Continue to the Dashboard

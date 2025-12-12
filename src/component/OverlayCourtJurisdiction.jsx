@@ -20,6 +20,30 @@ export default function OverlayCourtJurisdiction({ onBack, onClick, onSkip }) {
     const [isProvinceOpen, setIsProvinceOpen] = useState(false);
     const [isDistrictOpen, setIsDistrictOpen] = useState(false);
 
+    const handleNext = async () => {
+        if (!selectedProvince || !selectedDistrict) return;
+
+        try {
+            await lawyerAPI.saveCourtJurisdiction({
+                provinceId: selectedProvince,
+                district: selectedDistrict,
+                practiceHighCourt,
+                practiceSupremeCourt
+            });
+            console.log("Court jurisdiction saved!");
+            onClick({
+                provinceId: selectedProvince,
+                district: selectedDistrict,
+                practiceHighCourt,
+                practiceSupremeCourt
+            });
+        } catch (err) {
+            console.error("Failed to save court jurisdiction:", err);
+            alert("Failed to save court jurisdiction");
+        }
+    };
+
+
     // Fetch provinces on load
     useEffect(() => {
         const loadProvinces = async () => {
@@ -289,12 +313,7 @@ export default function OverlayCourtJurisdiction({ onBack, onClick, onSkip }) {
                 className="w-90 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
                 style={{ borderRadius: "10px", padding: "5px", fontSize: "15px" }}
                 disabled={!selectedProvince || !selectedDistrict}
-                onClick={() =>
-                    onClick({
-                        provinceId: selectedProvince,
-                        district: selectedDistrict,
-                    })
-                }
+                onClick={handleNext}
             >
                 Next
             </button>

@@ -1,4 +1,4 @@
-import { useState } from 'react'; 
+import { useState } from 'react';
 import eyeOpen from '../assets/eye-opened.png';
 import eyeClosed from '../assets/eye-closed.png';
 import { useNavigate } from "react-router-dom";
@@ -23,7 +23,7 @@ export default function SignUpCard() {
   // Password strength checker
   const checkPasswordStrength = (pwd) => {
     if (!pwd) return { strength: 'none', text: '', color: '' };
-    
+
     let strength = 0;
     const checks = {
       length: pwd.length >= 8,
@@ -111,12 +111,16 @@ export default function SignUpCard() {
 
     try {
       // Call the actual signup function from AuthContext
-      await signup(email, password, name || email.split('@')[0]); // Use email username as name if no name field
-      navigate('/onboarding'); // Navigate to profile or dashboard after successful signup
+      await signup(email, password, name || email.split('@')[0]);
+
+      // Clear onboarding state for fresh start
+      localStorage.removeItem("onboardingStep");
+
+      navigate('/onboarding');
     } catch (err) {
       // Handle specific error messages from backend
       const errorMessage = err.response?.data?.error || 'Registration failed';
-      
+
       if (errorMessage.toLowerCase().includes('email')) {
         setEmailError('Email already exists or is invalid');
       } else {
@@ -172,11 +176,9 @@ export default function SignUpCard() {
               }}
               onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="Input your email"
-              className={`placeholder:text-xs text-sm w-full px-3 py-3 border ${
-                emailError ? 'border-red-300' : 'border-gray-300'
-              } rounded-xl focus:outline-none focus:ring-2 ${
-                emailError ? 'focus:ring-red-400' : 'focus:ring-gray-400'
-              } focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
+              className={`placeholder:text-xs text-sm w-full px-3 py-3 border ${emailError ? 'border-red-300' : 'border-gray-300'
+                } rounded-xl focus:outline-none focus:ring-2 ${emailError ? 'focus:ring-red-400' : 'focus:ring-gray-400'
+                } focus:border-transparent transition-all text-gray-900 placeholder-gray-400`}
             />
             {emailError && (
               <p className="text-red-600 text-xs mt-1">{emailError}</p>
@@ -204,11 +206,9 @@ export default function SignUpCard() {
                 }}
                 onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                 placeholder="Input your password"
-                className={`placeholder:text-xs text-sm w-full px-3 py-3 border ${
-                  passwordError ? 'border-red-300' : 'border-gray-300'
-                } rounded-xl focus:outline-none focus:ring-2 ${
-                  passwordError ? 'focus:ring-red-400' : 'focus:ring-gray-400'
-                } focus:border-transparent transition-all text-gray-900 placeholder-gray-400 pr-12`}
+                className={`placeholder:text-xs text-sm w-full px-3 py-3 border ${passwordError ? 'border-red-300' : 'border-gray-300'
+                  } rounded-xl focus:outline-none focus:ring-2 ${passwordError ? 'focus:ring-red-400' : 'focus:ring-gray-400'
+                  } focus:border-transparent transition-all text-gray-900 placeholder-gray-400 pr-12`}
               />
               <button
                 type="button"
@@ -230,7 +230,7 @@ export default function SignUpCard() {
                 <p className={`text-xs ${passwordStrength.color} font-semibold`}>
                   Password strength: {passwordStrength.text}
                 </p>
-                
+
                 <p className="text-[10px] text-gray-500 mt-1">
                   Must have: 8+ characters, uppercase, lowercase, number, special character
                 </p>
@@ -263,11 +263,9 @@ export default function SignUpCard() {
                 }}
                 onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                 placeholder="Confirm your password"
-                className={`placeholder:text-xs text-sm w-full px-3 py-3 border ${
-                  confirmPasswordError ? 'border-red-300' : 'border-gray-300'
-                } rounded-xl focus:outline-none focus:ring-2 ${
-                  confirmPasswordError ? 'focus:ring-red-400' : 'focus:ring-gray-400'
-                } focus:border-transparent transition-all text-gray-900 placeholder-gray-400 pr-12`}
+                className={`placeholder:text-xs text-sm w-full px-3 py-3 border ${confirmPasswordError ? 'border-red-300' : 'border-gray-300'
+                  } rounded-xl focus:outline-none focus:ring-2 ${confirmPasswordError ? 'focus:ring-red-400' : 'focus:ring-gray-400'
+                  } focus:border-transparent transition-all text-gray-900 placeholder-gray-400 pr-12`}
               />
               <button
                 type="button"
@@ -285,9 +283,8 @@ export default function SignUpCard() {
 
             {/* Real-time password match indicator */}
             {confirmPassword && (
-              <p className={`text-xs mt-1 ${
-                password === confirmPassword ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <p className={`text-xs mt-1 ${password === confirmPassword ? 'text-green-600' : 'text-red-600'
+                }`}>
                 {password === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
               </p>
             )}

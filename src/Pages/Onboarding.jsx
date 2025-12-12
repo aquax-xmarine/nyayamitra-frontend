@@ -94,11 +94,15 @@ const Onboarding = () => {
           )}
 
           {overlay === "personalizationComplete" && (
-            <OverlayPersonalizationComplete />
+            <OverlayPersonalizationComplete 
+            onBack={() => setOverlay("courtJurisdiction")}
+            />
           )}
 
           {overlay === "personalizationIncomplete" && (
-            <OverlayPersonalizationIncomplete />
+            <OverlayPersonalizationIncomplete 
+             onBack={() => setOverlay("courtJurisdiction")}
+            />
           )}
 
         </div>

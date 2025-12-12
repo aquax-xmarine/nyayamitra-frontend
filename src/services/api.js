@@ -137,7 +137,32 @@ export const lawyerAPI = {
 
     const response = await api.get(`/lawyer/search?${params.toString()}`);
     return response.data;
+  },
+
+  // Save whether user is a lawyer or not
+  saveLawyerChoice: async (isLawyer) => {
+    const response = await api.put('/lawyer/choice', { isLawyer });
+    return response.data;
+  },
+
+  saveNBADetails: async (nbaNumber, licenseYear) => {
+    const response = await api.put('/lawyer/nba', { nbaNumber, licenseYear });
+    return response.data;
+  },
+
+  savePracticeAreas: async (areas) => {
+    const response = await api.put('/lawyer/practice-areas', { practiceAreas: areas });
+    return response.data;
+  },
+
+  saveCourtJurisdiction: async (data) => {
+    const response = await api.put('/lawyer/court-jurisdiction', data);
+    return response.data;
   }
+
+
+
+
 };
 // End of Lawyer specific APIs
 

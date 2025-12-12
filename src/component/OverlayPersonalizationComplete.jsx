@@ -18,7 +18,13 @@ export default function OverlayPersonalizationComplete({ onBack, onClick }) {
 
             {/* Back Button + Stars Row */}
             <div className="flex items-center w-full mb-4">
-                
+                <img
+                    src={backIcon}
+                    alt="back"
+                    className="cursor-pointer"
+                    style={{ width: "20px", height: "20px" }}
+                    onClick={onBack}
+                />
 
                 <div className="flex-1 flex justify-center">
                     <img src={sizthStar} alt="stars" style={{ width: "200px", height: "auto" }} />
@@ -66,7 +72,7 @@ export default function OverlayPersonalizationComplete({ onBack, onClick }) {
                     padding: "4px 0",
                     cursor: "pointer"
                 }}
-                
+
             >
                 {"\u200B"}
             </button>

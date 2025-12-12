@@ -2,11 +2,13 @@ import { useState } from "react";
 import thirdStar from "../assets/thirdStar.png";
 import backIcon from "../assets/backBlack.png";
 import SkipPersonalization from "../component/SkipPersonalization";
+import { lawyerAPI } from "../services/api";
 
 export default function OverlayNBA({ onBack, onClick, onSkip }) {
     const [showPopup, setShowPopup] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [selectedYear, setSelectedYear] = useState("");
+    const [nbaNumber, setNbaNumber] = useState("");
 
     // Generate years from current year back to 1950
     const currentYear = new Date().getFullYear();
@@ -16,6 +18,30 @@ export default function OverlayNBA({ onBack, onClick, onSkip }) {
         setSelectedYear(year);
         setIsOpen(false);
     };
+
+    const handleNext = async () => {
+        if (!nbaNumber || !selectedYear) {
+            alert("Please enter both NBA number and license year");
+            return;
+        }
+
+        // Validate NBA number: numeric only, 5-8 digits
+        const nbaRegex = /^[0-9]{5,8}$/;
+        if (!nbaRegex.test(nbaNumber)) {
+            alert("NBA number must be numeric and 5 to 8 digits");
+            return;
+        }
+
+        try {
+            await lawyerAPI.saveNBADetails(nbaNumber, selectedYear);
+            console.log("NBA details saved successfully!");
+            onClick(); // proceed to next step
+        } catch (error) {
+            console.error("Error saving NBA details:", error);
+            alert("Failed to save NBA details");
+        }
+    };
+
 
     return (
         <div className="w-120 h-120 p-13 pb-6 bg-white rounded-[15px] shadow-lg flex flex-col items-center">
@@ -54,6 +80,8 @@ export default function OverlayNBA({ onBack, onClick, onSkip }) {
                 <input
                     type="text"
                     placeholder="Enter NBA number"
+                    value={nbaNumber}
+                    onChange={(e) => setNbaNumber(e.target.value)}
                     className=" flex-1 px-3 py-2 border border-gray-900 rounded focus:outline-none placeholder:text-[#4C4B4B] focus:border-gray-500"
                     style={{ borderRadius: "10px", fontSize: "15px", height: "42px" }}
                 />
@@ -116,8 +144,8 @@ export default function OverlayNBA({ onBack, onClick, onSkip }) {
 
             <button
                 className="w-90 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ borderRadius: "10px", padding: '5px', fontSize: "15px" }}
-                onClick={onClick}
+                style={{ borderRadius: "10px", padding: '5px', fontSize: "15px", fontWeight: 'normal' }}
+                onClick={handleNext}
             >
                 Next
             </button>
