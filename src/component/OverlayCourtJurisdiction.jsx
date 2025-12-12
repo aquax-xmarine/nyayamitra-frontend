@@ -4,18 +4,24 @@ import fifthStar from "../assets/fifthStar.png";
 import backIcon from "../assets/backBlack.png";
 import SkipPersonalization from "../component/SkipPersonalization";
 
-export default function OverlayCourtJurisdiction({ onBack, onClick, onSkip }) {
-    const [practiceHighCourt, setPracticeHighCourt] = useState(false);
-    const [practiceSupremeCourt, setPracticeSupremeCourt] = useState(false);
+export default function OverlayCourtJurisdiction({ selectedProvince,
+    setSelectedProvince,
+    selectedDistrict,
+    setSelectedDistrict,
+    practiceHighCourt,
+    setPracticeHighCourt,
+    practiceSupremeCourt,
+    setPracticeSupremeCourt,
+    onBack,
+    onClick,
+    onSkip
+}) {
+    
 
     const [showPopup, setShowPopup] = useState(false);
 
     const [provinces, setProvinces] = useState([]);
     const [districts, setDistricts] = useState([]);
-
-    // store IDs as strings to avoid strict-equality type issues in UI
-    const [selectedProvince, setSelectedProvince] = useState("");
-    const [selectedDistrict, setSelectedDistrict] = useState("");
 
     const [isProvinceOpen, setIsProvinceOpen] = useState(false);
     const [isDistrictOpen, setIsDistrictOpen] = useState(false);
@@ -31,12 +37,7 @@ export default function OverlayCourtJurisdiction({ onBack, onClick, onSkip }) {
                 practiceSupremeCourt
             });
             console.log("Court jurisdiction saved!");
-            onClick({
-                provinceId: selectedProvince,
-                district: selectedDistrict,
-                practiceHighCourt,
-                practiceSupremeCourt
-            });
+            onClick();
         } catch (err) {
             console.error("Failed to save court jurisdiction:", err);
             alert("Failed to save court jurisdiction");

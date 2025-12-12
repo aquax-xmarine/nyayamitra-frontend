@@ -4,42 +4,43 @@ import backIcon from "../assets/backBlack.png";
 import SkipPersonalization from "../component/SkipPersonalization";
 import { lawyerAPI } from "../services/api";
 
-export default function OverlayNBA({ onBack, onClick, onSkip }) {
+export default function OverlayNBA({ nbaNumber, setNbaNumber, licenseYear, setLicenseYear, onBack, onClick, onSkip }) {
     const [showPopup, setShowPopup] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedYear, setSelectedYear] = useState("");
-    const [nbaNumber, setNbaNumber] = useState("");
+    const [error, setError] = useState(""); // <-- NEW: error message state
 
     // Generate years from current year back to 1950
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
 
     const handleYearSelect = (year) => {
-        setSelectedYear(year);
+        setLicenseYear(year);
         setIsOpen(false);
+        setError(""); // clear error when selecting year
     };
 
     const handleNext = async () => {
-        if (!nbaNumber || !selectedYear) {
-            alert("Please enter both NBA number and license year");
+        if (!nbaNumber || !licenseYear) {
+            setError("Please enter both NBA number and license year");
             return;
         }
 
-        // Validate NBA number: numeric only, 5-8 digits
+        // Validate NBA number
         const nbaRegex = /^[0-9]{5,8}$/;
         if (!nbaRegex.test(nbaNumber)) {
-            alert("NBA number must be numeric and 5 to 8 digits");
+            setError("NBA number must be numeric and 5 to 8 digits");
             return;
         }
 
         try {
-            await lawyerAPI.saveNBADetails(nbaNumber, selectedYear);
+            await lawyerAPI.saveNBADetails(nbaNumber, licenseYear); // use licenseYear
             console.log("NBA details saved successfully!");
-            onClick(); // proceed to next step
+            onClick();
         } catch (error) {
             console.error("Error saving NBA details:", error);
-            alert("Failed to save NBA details");
+            setError("Failed to save NBA details");
         }
+
     };
 
 
@@ -97,10 +98,10 @@ export default function OverlayNBA({ onBack, onClick, onSkip }) {
                         type="button"
                         onClick={() => setIsOpen(!isOpen)}
                         className="w-full px-3 py-2 border border-gray-900 rounded focus:outline-none focus:border-gray-500 bg-white text-left flex items-center justify-between"
-                        style={{ borderRadius: "10px", fontSize: "15px", height: "42px", color: selectedYear ? "#111827" : "#4C4B4B" }}
+                        style={{ borderRadius: "10px", fontSize: "15px", height: "42px", color: licenseYear ? "#111827" : "#4C4B4B" }}
                     >
                         <span style={{ marginLeft: "-20px", fontWeight: "400" }}>
-                            {selectedYear || "Select year"}
+                            {licenseYear || "Select year"}
                         </span>
 
                         <svg
@@ -138,6 +139,13 @@ export default function OverlayNBA({ onBack, onClick, onSkip }) {
                     )}
                 </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="w-90 max-w-md mt-2 px-3 py-2 bg-red-100 text-red-700 text-sm rounded-[10px] text-center">
+                    {error}
+                </div>
+            )}
 
             {/* Spacer to push buttons to bottom */}
             <div className="flex-1"></div>

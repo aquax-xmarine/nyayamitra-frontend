@@ -21,6 +21,64 @@ const Onboarding = () => {
 
   const disabled = true;
 
+  // LAWYER
+  const [lawyerChoice, setLawyerChoice] = useState(
+    JSON.parse(localStorage.getItem("lawyerChoice")) || null
+  );
+  useEffect(() => {
+    localStorage.setItem("lawyerChoice", JSON.stringify(lawyerChoice));
+  }, [lawyerChoice]);
+
+  // NBA
+  const [nbaNumber, setNbaNumber] = useState(
+    localStorage.getItem("nbaNumber") || ""
+  );
+  const [licenseYear, setLicenseYear] = useState(
+    localStorage.getItem("licenseYear") || ""
+  );
+  useEffect(() => {
+    localStorage.setItem("nbaNumber", nbaNumber);
+  }, [nbaNumber]);
+  useEffect(() => {
+    localStorage.setItem("licenseYear", licenseYear);
+  }, [licenseYear]);
+
+  // Practice Areas
+  const [selectedAreas, setSelectedAreas] = useState(
+    JSON.parse(localStorage.getItem("selectedAreas")) || []
+  );
+  useEffect(() => {
+    localStorage.setItem("selectedAreas", JSON.stringify(selectedAreas));
+  }, [selectedAreas]);
+
+  // Court Jurisdiction
+  const [selectedProvince, setSelectedProvince] = useState(
+    localStorage.getItem("selectedProvince") || ""
+  );
+  const [selectedDistrict, setSelectedDistrict] = useState(
+    localStorage.getItem("selectedDistrict") || ""
+  );
+  const [practiceHighCourt, setPracticeHighCourt] = useState(
+    JSON.parse(localStorage.getItem("practiceHighCourt")) || false
+  );
+  const [practiceSupremeCourt, setPracticeSupremeCourt] = useState(
+    JSON.parse(localStorage.getItem("practiceSupremeCourt")) || false
+  );
+  useEffect(() => {
+    localStorage.setItem("selectedProvince", selectedProvince);
+  }, [selectedProvince]);
+  useEffect(() => {
+    localStorage.setItem("selectedDistrict", selectedDistrict);
+  }, [selectedDistrict]);
+  useEffect(() => {
+    localStorage.setItem("practiceHighCourt", JSON.stringify(practiceHighCourt));
+  }, [practiceHighCourt]);
+  useEffect(() => {
+    localStorage.setItem("practiceSupremeCourt", JSON.stringify(practiceSupremeCourt));
+  }, [practiceSupremeCourt]);
+
+
+
   // Save to localStorage whenever overlay changes
   useEffect(() => {
     localStorage.setItem("onboardingStep", overlay);
@@ -63,6 +121,8 @@ const Onboarding = () => {
 
           {overlay === "lawyer" && (
             <OverlayLawyer
+              selectedOption={lawyerChoice}
+              setSelectedOption={setLawyerChoice}
               onClick={() => setOverlay("NBA")}
               onBack={() => setOverlay("name")}
               onSkip={() => setOverlay("personalizationIncomplete")}
@@ -71,6 +131,10 @@ const Onboarding = () => {
 
           {overlay === "NBA" && (
             <OverlayNBA
+              nbaNumber={nbaNumber}
+              setNbaNumber={setNbaNumber}
+              licenseYear={licenseYear}
+              setLicenseYear={setLicenseYear}
               onClick={() => setOverlay("practiceArea")}
               onBack={() => setOverlay("lawyer")}
               onSkip={() => setOverlay("personalizationIncomplete")}
@@ -79,6 +143,8 @@ const Onboarding = () => {
 
           {overlay === "practiceArea" && (
             <OverlayPracticeArea
+              selectedAreas={selectedAreas}
+              setSelectedAreas={setSelectedAreas}
               onClick={() => setOverlay("courtJurisdiction")}
               onBack={() => setOverlay("NBA")}
               onSkip={() => setOverlay("personalizationIncomplete")}
@@ -87,6 +153,14 @@ const Onboarding = () => {
 
           {overlay === "courtJurisdiction" && (
             <OverlayCourtJurisdiction
+              selectedProvince={selectedProvince}
+              setSelectedProvince={setSelectedProvince}
+              selectedDistrict={selectedDistrict}
+              setSelectedDistrict={setSelectedDistrict}
+              practiceHighCourt={practiceHighCourt}
+              setPracticeHighCourt={setPracticeHighCourt}
+              practiceSupremeCourt={practiceSupremeCourt}
+              setPracticeSupremeCourt={setPracticeSupremeCourt}
               onClick={() => setOverlay("personalizationComplete")}
               onBack={() => setOverlay("practiceArea")}
               onSkip={() => setOverlay("personalizationIncomplete")}
@@ -94,14 +168,14 @@ const Onboarding = () => {
           )}
 
           {overlay === "personalizationComplete" && (
-            <OverlayPersonalizationComplete 
-            onBack={() => setOverlay("courtJurisdiction")}
+            <OverlayPersonalizationComplete
+              onBack={() => setOverlay("courtJurisdiction")}
             />
           )}
 
           {overlay === "personalizationIncomplete" && (
-            <OverlayPersonalizationIncomplete 
-             onBack={() => setOverlay("courtJurisdiction")}
+            <OverlayPersonalizationIncomplete
+              onBack={() => setOverlay("courtJurisdiction")}
             />
           )}
 

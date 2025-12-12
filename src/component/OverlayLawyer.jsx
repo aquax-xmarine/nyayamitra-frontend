@@ -5,9 +5,9 @@ import SkipPersonalization from "../component/SkipPersonalization";
 import { lawyerAPI } from "../services/api";
 
 
-export default function OverlayLawyer({ onBack, onClick, onSkip }) {
+export default function OverlayLawyer({ selectedOption, setSelectedOption, onBack, onClick, onSkip }) {
   const [showPopup, setShowPopup] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
+ 
 
   const handleLawyerChoice = (value) => {
     setSelectedOption(value);
