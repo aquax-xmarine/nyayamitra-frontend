@@ -3,9 +3,12 @@ import backIcon from "../assets/backBlack.png";
 import { useState, useEffect } from "react";
 import Progress from "../assets/Progress.gif";
 import percent from "../assets/40percent.png";
+import { useNavigate } from "react-router-dom";
 
 export default function OverlayPersonalizationIncomplete({onBack}) {
     const [showPercent, setShowPercent] = useState(false);
+    const navigate = useNavigate();
+
 
     // Run only once on mount
     useEffect(() => {
@@ -71,6 +74,7 @@ export default function OverlayPersonalizationIncomplete({onBack}) {
             <button
                 className="w-90 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
                 style={{ borderRadius: "10px", padding: "5px", fontSize: "15px", fontWeight: 'normal' }}
+                onClick={() => navigate("/dashboard")}
 
             >
                 Continue to the Dashboard

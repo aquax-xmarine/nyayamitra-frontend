@@ -2,7 +2,7 @@ import sizthStar from "../assets/sizthStar.png";
 import backIcon from "../assets/backBlack.png";
 import { useState } from "react";
 import Confetti from "../assets/Confetti.gif";
-
+import { useNavigate } from "react-router-dom";
 
 
 export default function OverlayPersonalizationComplete({ onBack, onClick }) {
@@ -12,6 +12,7 @@ export default function OverlayPersonalizationComplete({ onBack, onClick }) {
     const handleLawyerChoice = (value) => {
         setSelectedOption(value);
     };
+    const navigate = useNavigate();
 
     return (
         <div className="w-120 h-120 p-13 pb-6 bg-white rounded-[15px] shadow-lg flex flex-col items-center">
@@ -57,6 +58,7 @@ export default function OverlayPersonalizationComplete({ onBack, onClick }) {
             <button
                 className="w-90 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
                 style={{ borderRadius: "10px", padding: "5px", fontSize: "15px" }}
+                onClick={() => navigate("/dashboard")}
 
             >
                 Continue to the Dashboard
