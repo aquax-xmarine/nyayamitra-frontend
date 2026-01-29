@@ -1,6 +1,6 @@
 import { useState } from "react";  // Add this
 import { useNavigate } from "react-router-dom";
-import LoginNavbarAsk from '../component/NavBarProfileAsk';
+import LoginNavbarAsk from '../component/AskQuestion.jsx';
 import LoginNavbarIcon from '../component/NavBarProfileIcon';
 import LoginNavbarProfile from '../component/NavBarProfileProfile';
 import { askNyayaLM } from '../services/nyayalm';  // Add this
@@ -35,30 +35,39 @@ const Dashboard = () => {
     }
   };
 
+
+
+
   return (
-    <div className='flex h-screen'>
-      <div className='w-15 py-3 border-r'>
-        <LoginNavbarIcon />
+    <div className='flex h-screen overflow-hidden'>
+      {/* Left Sidebar - Icon Navigation */}
+      <div className='w-16 border-r shrink-0 overflow-y-auto'>
+        <div className='py-3 px-2'>
+          <LoginNavbarIcon />
+        </div>
       </div>
 
-      <div className='flex-1 py-4 h-full'>
-        <LoginNavbarAsk
-          onAskQuestion={handleAskQuestion}
-          question={question}
-          answer={answer}
-          loading={loading}
-          error={error}
-        />
+      {/* Main Content Area */}
+      <div className='flex-1 flex flex-col min-w-0 px-8 py-5'>
+  
+          <LoginNavbarAsk
+            onAskQuestion={handleAskQuestion}
+            question={question}
+            answer={answer}
+            loading={loading}
+            error={error}
+          />
+
+        
       </div>
 
-
-      <div className='w-25 py-2'>
-        <LoginNavbarProfile />
+      {/* Right Sidebar - Profile */}
+      <div className='w-30 shrink-0'>
+        <div className='px-4 py-2'>
+          <LoginNavbarProfile />
+        </div>
       </div>
-
-
     </div>
-
   );
 };
 
