@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import SendIcon from '../assets/send.png';
+import addIcon from '../assets/add.png';
 
 const AskQuestion = ({ onAskQuestion, question, answer, loading, error }) => {
   const [inputValue, setInputValue] = useState('');
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const canSend = (!loading) && (inputValue.trim() || attachedFiles.length > 0);
+
+
 
   // Auto-resize textarea
   useEffect(() => {
@@ -15,17 +21,37 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error }) => {
     }
   }, [inputValue]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!inputValue.trim()) {
-      alert('Please enter a question');
-      return;
-    }
+    try {
+      const formData = new FormData();
+      formData.append('question', inputValue);
 
-    onAskQuestion(inputValue);
-    setInputValue(''); // Clear input after submission
+      attachedFiles.forEach(file => {
+        formData.append('files', file); // 👈 SAME FIELD NAME
+      });
+
+
+      const response = await fetch('https://localhost:5000/api/ask', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      const data = await response.json();
+      console.log('Backend response:', data);
+
+      // optional: show answer in UI
+      // setAnswer(data.answer);
+
+      setInputValue('');
+      setAttachedFiles([]);
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
   };
+
 
   return (
     <div className="h-full flex flex-col">
@@ -65,35 +91,95 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error }) => {
 
       {/* Question Input (BOTTOM) */}
       <form onSubmit={handleSubmit} className="mt-auto py-4 pl-70 pr-50">
-        <div className="flex items-center gap-2 border-2 border-gray-300 rounded-3xl p-2
+
+
+        <div className="flex items-end gap-2 border-2 border-gray-300 rounded-3xl p-2
                   focus-within:border-black">
 
           {/* Attachment button – LEFT */}
           <button
             type="button"
-            className="text-gray-500 hover:text-gray-700 ml-5 mr-2"
+            onClick={() => fileInputRef.current.click()}
+            className="self-end w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700 ml-5 mr-2"
             title="Attach file"
             style={{ border: 'none', background: 'transparent', padding: 0, outline: 'none' }}
           >
-            📎
+            <img
+              src={addIcon}
+              alt="Send"
+              className="w-5 h-5"
+            />
           </button>
 
-          <textarea
-            ref={textareaRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask your legal question here..."
-            rows="1"
-            disabled={loading}
-            className="flex-1 px-2 py-2 focus:outline-none resize-none bg-transparent overflow-y-auto max-h-40 custom-scrollbar"
-            style={{ minHeight: '2.5rem' }}
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.txt"
+            multiple
+            onChange={(e) => {
+              const newFiles = Array.from(e.target.files);
+
+              setAttachedFiles((prevFiles) => {
+                const existingNames = new Set(prevFiles.map(f => f.name));
+                const filteredNewFiles = newFiles.filter(
+                  f => !existingNames.has(f.name)
+                );
+                return [...prevFiles, ...filteredNewFiles];
+              });
+
+
+              // Reset input so same file can be selected again if needed
+              e.target.value = null;
+            }}
+
           />
+
+          <div className="flex flex-col flex-1">
+            {attachedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-1">
+                {attachedFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 border border-gray-300 rounded-xl text-sm text-gray-600 px-2 py-2"
+                  >
+                    📄
+                    <span className="truncate max-w-xs">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAttachedFiles(attachedFiles.filter((_, i) => i !== index))
+                      }
+                      className="text-red-500 hover:text-red-700"
+                      style={{ border: 'none', padding: 0, outline: 'none' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={attachedFiles.length > 0 ? '' : 'Ask your legal question here...'}
+              rows="1"
+              disabled={loading}
+              className="w-full px-0 py-2 focus:outline-none resize-none bg-transparent overflow-y-auto max-h-40"
+              style={{ minHeight: '2.5rem' }}
+            />
+          </div>
+
 
           {/* Send button – RIGHT */}
           <button
             type="submit"
-            disabled={loading}
-            className="rounded-full w-10 h-10 flex items-center justify-center disabled:bg-white mr-2"
+            disabled={!canSend}
+            className={`self-end rounded-full w-10 h-10 flex items-center justify-center mr-2
+    ${!canSend ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'}
+  `}
             title="Send"
             style={{ border: 'none', padding: 0, outline: 'none' }}
           >
@@ -103,6 +189,8 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error }) => {
               className="w-5 h-5"
             />
           </button>
+
+
 
         </div>
       </form>
