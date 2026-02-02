@@ -26,7 +26,10 @@ export default function LoginNavbarProfile() {
 
     return (
         <div className="flex items-center justify-start p-2 w-40">
-            <div className="h-9 w-9">
+            <div 
+            className="h-9 w-9 cursor-pointer"
+            onClick={() => navigate("/profile")}
+            >
                 <img
                     src={getProfilePictureUrl()}
                     alt="profile"

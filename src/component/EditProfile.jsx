@@ -172,7 +172,7 @@ export default function EditProfile() {
 
   return (
     <div className="max-w-2xl mx-auto -mt-6">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">Edit profile</h1>
+      <h1 className="text-2xl font-semibold text-gray-800 mt-20 mb-6">Edit profile</h1>
 
       {/* Success/Error Message with Progress Bar */}
       {message.text && (

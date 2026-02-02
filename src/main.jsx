@@ -11,6 +11,7 @@ import SignUp from "./Pages/SignUpPage.jsx";
 import Profilepage from './Pages/ProfilePage.jsx';
 import Onboarding from './Pages/Onboarding.jsx';
 import Dashboard from './Pages/Dashboard.jsx'
+import FileManager from './Pages/FileManager.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/profile" element={<Profilepage />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/fileManager" element={<FileManager />} />
           
         </Routes>
       </AuthProvider>
