@@ -1,10 +1,16 @@
 import React from 'react';
-import contract_img from '../assets/contract_img.png'; 
+import contract_img from '../assets/contract_img.png';
 import search_icon from '../assets/search_icon.png';
+import library_icon from '../assets/library_icon.png';
+import bookmark_icon from '../assets/bookmark_icon.png';
+import recent_icon from '../assets/recent_icon.png';
+import duplicate_icon from '../assets/duplicate_icon.png';
+import trash_icon from '../assets/trash_icon.png';
+import current_working_cases_icon from '../assets/current_working_cases_icon.png';
 
 export default function FileManagerLeftSection({ width }) {
     return (
-        
+
         <div
             className=" px-3 pr-1 pt-1 -ml-2 relative "
             style={{
@@ -33,6 +39,106 @@ export default function FileManagerLeftSection({ width }) {
                     />
                 </button>
             </div>
+
+            <div className="flex flex-col gap-2 mt-4 pr-1 pl-5">
+                <button
+                    className="px-3 py-1 text-xs rounded flex items-center gap-2"
+                    style={{
+                        background: "transparent",
+                        border: "none",
+                        fontSize: "13px",
+                        padding: "4px 0",
+                        cursor: "pointer",
+                        fontWeight: "400",
+                        outline: "none"
+                    }}
+                >
+                    <img src={library_icon} alt="" className="w-3 h-3" />
+                    <span>My Library</span>
+                </button>
+
+                <button
+                    className="px-3 py-1 text-xs rounded flex items-center gap-2"
+                    style={{
+                        background: "transparent",
+                        border: "none",
+                        fontSize: "13px",
+                        padding: "4px 0",
+                        cursor: "pointer",
+                        fontWeight: "400",
+                        outline: "none"
+
+                    }}
+                >
+                    <img src={current_working_cases_icon} alt="" className="w-3 h-3" />
+                    <span>Current Working Cases</span>
+                </button>
+
+                <button
+                    className="px-3 py-1 text-xs rounded flex items-center gap-2"
+                    style={{
+                        background: "transparent",
+                        border: "none",
+                        fontSize: "13px",
+                        padding: "4px 0",
+                        cursor: "pointer",
+                        fontWeight: "400",
+                        outline: "none"
+                    }}
+                >
+                    <img src={bookmark_icon} alt="" className="w-3 h-3" />
+                    <span>Bookmark</span>
+                </button>
+
+                <button
+                    className="px-3 py-1 text-xs rounded flex items-center gap-2"
+                    style={{
+                        background: "transparent",
+                        border: "none",
+                        fontSize: "13px",
+                        padding: "4px 0",
+                        cursor: "pointer",
+                        fontWeight: "400",
+                        outline: "none"
+                    }}
+                >
+                    <img src={recent_icon} alt="" className="w-3 h-3" />
+                    <span>Recently Visited</span>
+                </button>
+
+                <button
+                    className="px-3 py-1 text-xs rounded flex items-center gap-2"
+                    style={{
+                        background: "transparent",
+                        border: "none",
+                        fontSize: "13px",
+                        padding: "4px 0",
+                        cursor: "pointer",
+                        fontWeight: "400",
+                        outline: "none"
+                    }}
+                >
+                    <img src={duplicate_icon} alt="" className="w-3 h-3" />
+                    <span>Duplicate Items</span>
+                </button>
+
+                <button
+                    className="px-3 py-1 text-xs rounded flex items-center gap-2"
+                    style={{
+                        background: "transparent",
+                        border: "none",
+                        fontSize: "13px",
+                        padding: "4px 0",
+                        cursor: "pointer",
+                        fontWeight: "400",
+                        outline: "none"
+                    }}
+                >
+                    <img src={trash_icon} alt="" className="w-3 h-3" />
+                    <span>Trash</span>
+                </button>
+            </div>
+
 
 
         </div>
