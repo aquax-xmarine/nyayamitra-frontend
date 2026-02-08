@@ -51,7 +51,7 @@ export default function LoginCard() {
 
     try {
       await login(email, password);
-      navigate('/profile');
+      navigate('/dashboard');
     } catch (err) {
       // Parse backend error response
       const errorMessage = err.response?.data?.error || 'Invalid email or password';

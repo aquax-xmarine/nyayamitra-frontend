@@ -26,9 +26,9 @@ export default function LoginNavbarProfile() {
 
     return (
         <div className="flex items-center justify-start p-2 w-40">
-            <div 
-            className="h-9 w-9 cursor-pointer"
-            onClick={() => navigate("/profile")}
+            <div
+                className="h-9 w-9 cursor-pointer"
+                onClick={() => navigate("/profile")}
             >
                 <img
                     src={getProfilePictureUrl()}
@@ -40,7 +40,7 @@ export default function LoginNavbarProfile() {
             <button
                 className="z-50"
                 onClick={() => setIsOverlayOpen(!isOverlayOpen)}
-                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#000000'}}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#000000' }}
             >
                 {isOverlayOpen ? <SlArrowUp /> : <SlArrowDown />}
             </button>
@@ -59,7 +59,7 @@ export default function LoginNavbarProfile() {
                         <button
                             onClick={handleLogout}
                             className="bg-white border border-gray-300 rounded-lg px-2 py-2 shadow-lg hover:bg-gray-50"
-                            style={{ border: 'none', borderRadius: '7px', background: '#000000', outline: 'none', fontSize: '11px', color: '#FFFFFF', marginTop: '10px', marginRight: '20px'}}
+                            style={{ border: 'none', borderRadius: '7px', background: '#000000', outline: 'none', fontSize: '11px', color: '#FFFFFF', marginTop: '10px', marginRight: '20px' }}
                         >
                             Log out
                         </button>

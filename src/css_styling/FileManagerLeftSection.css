@@ -1,0 +1,43 @@
+.context-btn {
+  all: unset;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.context-btn:focus,
+.context-btn:focus-visible,
+.context-btn:active {
+  outline: none ;
+  box-shadow: none ;
+}
+
+.sidebar-btn {
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  padding: 4px 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 👇 THIS is the hover highlight */
+.sidebar-btn:hover {
+  background-color: #E0E7FF;
+}
+
+/* 👇 THIS is the clicked (active) highlight */
+.sidebar-btn.active {
+  background-color: #C7D2FE;
+}
+
+.sidebar-btn:focus,
+.sidebar-btn:focus-visible,
+.sidebar-btn:active {
+  outline: none;
+  box-shadow: none;
+}
