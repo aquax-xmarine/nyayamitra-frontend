@@ -9,7 +9,7 @@ import duplicate_icon from '../assets/duplicate_icon.png';
 import trash_icon from '../assets/trash_icon.png';
 import current_working_cases_icon from '../assets/current_working_cases_icon.png';
 import right_arrow from '../assets/right_arrow.png';
-import down_arrow from '../assets/down_arrow.png';
+import folder_img from '../assets/folder.png';
 import '../css_styling/FileManagerLeftSection.css';
 
 export default function FileManagerLeftSection({ width }) {
@@ -22,7 +22,7 @@ export default function FileManagerLeftSection({ width }) {
         section: null,
     });
     const handleRightClick = (e, section) => {
-        e.preventDefault(); // 🚫 disable browser menu
+        e.preventDefault(); // 
 
         setContextMenu({
             visible: true,
@@ -48,7 +48,122 @@ export default function FileManagerLeftSection({ width }) {
     const [libraryOpen, setLibraryOpen] = useState(false);
     const inputRefs = useRef({});
 
-    
+    const toggleNode = (nodes, id) =>
+        nodes.map(node =>
+            node.id === id
+                ? { ...node, open: !node.open }
+                : {
+                    ...node,
+                    children: toggleNode(node.children, id),
+                }
+        );
+
+    const toggle = (id) => {
+        setLibraryOpen(true);
+        setSubcollections(prev => toggleNode(prev, id));
+    };
+
+
+
+    const addChildNode = (nodes, parentId, newNode) =>
+        nodes.map(node =>
+            node.id === parentId
+                ? { ...node, children: [...node.children, newNode], open: true }
+                : { ...node, children: addChildNode(node.children, parentId, newNode) }
+        );
+
+    const setEditingNode = (nodes, id) =>
+        nodes.map(node =>
+            node.id === id
+                ? { ...node, editing: true }
+                : {
+                    ...node,
+                    children: setEditingNode(node.children, id),
+                }
+        );
+
+    const updateNodeName = (nodes, id, name) =>
+        nodes.map(node =>
+            node.id === id
+                ? { ...node, name }
+                : { ...node, children: updateNodeName(node.children, id, name) }
+        );
+
+    const stopEditingNode = (nodes, id) =>
+        nodes.map(node =>
+            node.id === id
+                ? { ...node, editing: false }
+                : { ...node, children: stopEditingNode(node.children, id) }
+        );
+
+    const [activeNodeId, setActiveNodeId] = useState(null);
+
+
+
+
+
+
+
+
+    function CollectionNode({ node, level }) {
+        return (
+            <>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();       
+                        setActiveNodeId(node.id); 
+                        toggle(node.id);
+                    }}
+                    onContextMenu={(e) => handleRightClick(e, node)}
+                    className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 
+        ${activeNodeId === node.id ? 'active' : ''}`}
+                    style={{ paddingLeft: 23 + level * 15, fontWeight: 400 }}
+                >
+                    <img
+                        src={right_arrow}
+                        className={`w-2 h-4 transition-transform ${node.open ? 'rotate-90' : ''}`}
+                    />
+                    <img src={folder_img} alt="" className="w-3 h-3" />
+                    {node.editing ? (
+                        <input
+                            autoFocus
+                            value={node.name}
+                            className="bg-white text-xs px-1 rounded outline-none border border-gray-400"
+                            onChange={e => {
+                                setSubcollections(prev =>
+                                    updateNodeName(prev, node.id, e.target.value)
+                                );
+                            }}
+
+                            onBlur={() => {
+                                setSubcollections(prev =>
+                                    stopEditingNode(prev, node.id)
+                                );
+                            }}
+
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') e.target.blur();
+                            }}
+                        />
+                    ) : (
+                        <span>{node.name}</span>
+                    )}
+
+                </button>
+
+                {node.open &&
+                    node.children.map(child => (
+                        <CollectionNode
+                            key={child.id}
+                            node={child}
+                            level={level + 1}
+                        />
+                    ))}
+            </>
+        );
+    }
+
+
 
 
     return (
@@ -117,55 +232,12 @@ export default function FileManagerLeftSection({ width }) {
                     <span >My Library</span>
                 </button>
 
-                {activeSection === 'library' && subcollections.map(sub => (
-                    <button
-                        key={sub.id}
-                        className="sidebar-btn px-3 py-1 text-xs flex items-center gap-2"
-                        style={{
-                            marginLeft: '15px',   //  indentation
-                            fontWeight: '400',
-                            opacity: 0.9,
-                        }}
-                    >
-                        <img
-                            src={right_arrow}
-                            alt=""
-                            className={`w-2 h-4 ml-5 transition-transform duration-200 ${libraryOpen ? 'rotate-90' : ''
-                                }`}
-                        />
+                {libraryOpen &&
+                    subcollections.map(node => (
+                        <CollectionNode key={node.id} node={node} level={1} />
+                    ))}
 
 
-                        {sub.editing ? (
-                            <input
-                                ref={el => (inputRefs.current[sub.id] = el)}
-                                value={sub.name}
-                                autoFocus
-                                className="bg-white text-xs px-1 rounded outline-none border border-gray-400"
-                                onChange={e => {
-                                    setSubcollections(prev =>
-                                        prev.map(s =>
-                                            s.id === sub.id ? { ...s, name: e.target.value } : s
-                                        )
-                                    );
-                                }}
-                                onBlur={() => {
-                                    setSubcollections(prev =>
-                                        prev.map(s =>
-                                            s.id === sub.id ? { ...s, editing: false } : s
-                                        )
-                                    );
-                                }}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                        e.target.blur();
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <span>{sub.name}</span>
-                        )}
-                    </button>
-                ))}
 
 
                 <button
@@ -262,27 +334,55 @@ export default function FileManagerLeftSection({ width }) {
                                     fontWeight: "400"
                                 }}
                             >
+                                <button className="context-btn block w-full text-left py-1">
+                                    Upload Files
+                                </button>
                                 <button
                                     className="context-btn block w-full text-left py-1"
                                     onClick={() => {
-                                        setSubcollections(prev => [
-                                            ...prev,
-                                            {
-                                                id: Date.now(),
-                                                name: 'New Subcollection',
-                                                editing: true,
+                                        const newNode = {
+                                            id: Date.now(),
+                                            name: 'New Subcollection',
+                                            editing: true,
+                                            open: false,
+                                            children: [],
+                                        };
+
+                                        // 🔥 ENSURE LIBRARY IS OPEN
+                                        setLibraryOpen(true);
+
+                                        setSubcollections(prev => {
+                                            if (contextMenu.section === 'library') {
+                                                return [...prev, newNode];
                                             }
-                                        ]);
+
+                                            return addChildNode(prev, contextMenu.section.id, newNode);
+                                        });
 
                                         setContextMenu({ ...contextMenu, visible: false });
                                     }}
+
                                 >
                                     New Subcollection
                                 </button>
 
-                                <button className="context-btn block w-full text-left py-1">
+
+                                <button
+                                    className="context-btn block w-full text-left py-1"
+                                    onClick={() => {
+                                        // Ignore library rename for now
+                                        if (contextMenu.section !== 'library') {
+                                            setSubcollections(prev =>
+                                                setEditingNode(prev, contextMenu.section.id)
+                                            );
+                                        }
+
+                                        setContextMenu({ ...contextMenu, visible: false });
+                                    }}
+                                >
                                     Rename
                                 </button>
+
                                 <button className="context-btn block w-full text-left py-1">
                                     Move To
                                 </button>
