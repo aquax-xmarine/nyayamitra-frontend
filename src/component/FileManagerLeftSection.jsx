@@ -14,7 +14,6 @@ import '../css_styling/FileManagerLeftSection.css';
 
 export default function FileManagerLeftSection({ width }) {
     const [activeSection, setActiveSection] = useState(null);
-    const [openOverlay, setOpenOverlay] = useState(null);
     const [contextMenu, setContextMenu] = useState({
         visible: false,
         x: 0,
@@ -38,15 +37,17 @@ export default function FileManagerLeftSection({ width }) {
         const files = Array.from(e.target.files);
         console.log('Uploaded files:', files);
 
-        // TODO:
-        // - save to state
-        // - send to backend
-        // - attach to current collection
+
     };
 
-    const [subcollections, setSubcollections] = useState([]);
+    const [trees, setTrees] = useState({
+        library: [],
+        workingCases: [],
+    });
+
     const [libraryOpen, setLibraryOpen] = useState(false);
-    const inputRefs = useRef({});
+    const [workingCasesOpen, setWorkingCasesOpen] = useState(false);
+
 
     const toggleNode = (nodes, id) =>
         nodes.map(node =>
@@ -58,10 +59,13 @@ export default function FileManagerLeftSection({ width }) {
                 }
         );
 
-    const toggle = (id) => {
-        setLibraryOpen(true);
-        setSubcollections(prev => toggleNode(prev, id));
+    const toggle = (sectionKey, id) => {
+        setTrees(prev => ({
+            ...prev,
+            [sectionKey]: toggleNode(prev[sectionKey], id),
+        }));
     };
+
 
 
 
@@ -98,23 +102,29 @@ export default function FileManagerLeftSection({ width }) {
 
     const [activeNodeId, setActiveNodeId] = useState(null);
 
+    const isRootSection =
+        contextMenu.section === 'library' ||
+        contextMenu.section === 'workingCases';
 
 
 
 
 
 
-
-    function CollectionNode({ node, level }) {
+    function CollectionNode({ node, level, sectionKey }) {
         return (
             <>
                 <button
                     onClick={(e) => {
-                        e.stopPropagation();       
-                        setActiveNodeId(node.id); 
-                        toggle(node.id);
+                        e.stopPropagation();
+                        setActiveSection(null);
+                        setActiveNodeId(node.id);
+                        toggle(sectionKey, node.id);
                     }}
-                    onContextMenu={(e) => handleRightClick(e, node)}
+                    onContextMenu={(e) =>
+                        handleRightClick(e, { ...node, sectionKey })
+                    }
+
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 
         ${activeNodeId === node.id ? 'active' : ''}`}
                     style={{ paddingLeft: 23 + level * 15, fontWeight: 400 }}
@@ -130,15 +140,26 @@ export default function FileManagerLeftSection({ width }) {
                             value={node.name}
                             className="bg-white text-xs px-1 rounded outline-none border border-gray-400"
                             onChange={e => {
-                                setSubcollections(prev =>
-                                    updateNodeName(prev, node.id, e.target.value)
-                                );
+                                setTrees(prev => ({
+                                    ...prev,
+                                    [sectionKey]: updateNodeName(
+                                        prev[sectionKey],
+                                        node.id,
+                                        e.target.value
+                                    ),
+                                }));
+
                             }}
 
                             onBlur={() => {
-                                setSubcollections(prev =>
-                                    stopEditingNode(prev, node.id)
-                                );
+                                setTrees(prev => ({
+                                    ...prev,
+                                    [sectionKey]: stopEditingNode(
+                                        prev[sectionKey],
+                                        node.id
+                                    ),
+                                }));
+
                             }}
 
                             onKeyDown={e => {
@@ -157,8 +178,10 @@ export default function FileManagerLeftSection({ width }) {
                             key={child.id}
                             node={child}
                             level={level + 1}
+                            sectionKey={sectionKey}
                         />
                     ))}
+
             </>
         );
     }
@@ -206,13 +229,17 @@ export default function FileManagerLeftSection({ width }) {
                 </button>
             </div>
 
+            {/* Library Button */}
             <div className="flex flex-col gap-2 mt-4 pr-1">
                 <button
                     onClick={() => {
                         setActiveSection('library');
+                        setActiveNodeId(null);
                         setLibraryOpen(prev => !prev);
                     }}
                     onContextMenu={(e) => handleRightClick(e, 'library')}
+
+
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 ${activeSection === 'library' ? 'active' : ''
                         }`}
                     style={{
@@ -233,29 +260,57 @@ export default function FileManagerLeftSection({ width }) {
                 </button>
 
                 {libraryOpen &&
-                    subcollections.map(node => (
-                        <CollectionNode key={node.id} node={node} level={1} />
+                    trees.library.map(node => (
+                        <CollectionNode
+                            key={node.id}
+                            node={node}
+                            level={1}
+                            sectionKey="library"
+                        />
                     ))}
 
 
-
+                {/* WorkingCases Button */}
 
                 <button
-                    onClick={() => setActiveSection('workingCases')}
+                    onClick={() => {
+                        setActiveSection('workingCases');
+                        setActiveNodeId(null);
+                        setWorkingCasesOpen(prev => !prev);
+                    }}
+                    onContextMenu={(e) => handleRightClick(e, 'workingCases')}
+
+
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 ${activeSection === 'workingCases' ? 'active' : ''
                         }`}
                     style={{
                         fontWeight: "400",
                     }}
                 >
-                    <img src={right_arrow} alt="" className="w-2 h-4 ml-5" />
+
+                    <img
+                        src={right_arrow}
+                        alt=""
+                        className={`w-2 h-4 ml-5 transition-transform duration-200 ${workingCasesOpen ? 'rotate-90' : ''
+                            }`}
+                    />
                     <img src={current_working_cases_icon} alt="" className="w-3 h-3" />
                     <span >Current Working Cases</span>
                 </button>
 
+                {workingCasesOpen &&
+                    trees.workingCases.map(node => (
+                        <CollectionNode
+                            key={node.id}
+                            node={node}
+                            level={1}
+                            sectionKey="workingCases"
+                        />
+                    ))}
 
 
 
+                {/* Bookmark Button */}
                 <button
                     onClick={() => setActiveSection('bookmark')}
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 ${activeSection === 'bookmark' ? 'active' : ''
@@ -268,6 +323,8 @@ export default function FileManagerLeftSection({ width }) {
                     <span >Bookmark</span>
                 </button>
 
+
+                {/* Recent Button */}
                 <button
                     onClick={() => setActiveSection('recent')}
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 ${activeSection === 'recent' ? 'active' : ''
@@ -280,6 +337,8 @@ export default function FileManagerLeftSection({ width }) {
                     <span>Recently Visited</span>
                 </button>
 
+
+                {/* Duplicate Button */}
                 <button
                     onClick={() => setActiveSection('duplicate')}
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 ${activeSection === 'duplicate' ? 'active' : ''
@@ -292,6 +351,10 @@ export default function FileManagerLeftSection({ width }) {
                     <span >Duplicate Items</span>
                 </button>
 
+
+
+
+                {/* Trash Button */}
                 <button
                     onClick={() => setActiveSection('trash')}
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 ${activeSection === 'trash' ? 'active' : ''
@@ -303,6 +366,8 @@ export default function FileManagerLeftSection({ width }) {
                     <img src={trash_icon} alt="" className="w-3 h-3 ml-5" />
                     <span>Trash</span>
                 </button>
+
+
 
                 {contextMenu.visible && (
                     <>
@@ -323,7 +388,7 @@ export default function FileManagerLeftSection({ width }) {
                             }}
                         >
                             <div
-                                className=" px-8 py-2"
+                                className="  pr-11 pl-1 py-2"
                                 style={{
                                     background: '#D9D9D9',
                                     color: '#000000',
@@ -334,9 +399,21 @@ export default function FileManagerLeftSection({ width }) {
                                     fontWeight: "400"
                                 }}
                             >
-                                <button className="context-btn block w-full text-left py-1">
+
+                                {/* Upload Button  */}
+                                <button
+                                    className="context-btn block w-full text-left py-1"
+                                    onClick={() => {
+                                        fileInputRef.current?.click();
+                                        setContextMenu({ ...contextMenu, visible: false });
+                                    }}
+                                >
                                     Upload Files
                                 </button>
+
+
+
+                                {/* SubCollection Button */}
                                 <button
                                     className="context-btn block w-full text-left py-1"
                                     onClick={() => {
@@ -348,16 +425,39 @@ export default function FileManagerLeftSection({ width }) {
                                             children: [],
                                         };
 
-                                        // 🔥 ENSURE LIBRARY IS OPEN
-                                        setLibraryOpen(true);
+                                        if (contextMenu.section === 'library') {
+                                            setLibraryOpen(true);
+                                        }
 
-                                        setSubcollections(prev => {
-                                            if (contextMenu.section === 'library') {
-                                                return [...prev, newNode];
+                                        if (contextMenu.section === 'workingCases') {
+                                            setWorkingCasesOpen(true);
+                                        }
+
+
+                                        setTrees(prev => {
+                                            // adding directly under a root section
+                                            if (
+                                                contextMenu.section === 'library' ||
+                                                contextMenu.section === 'workingCases'
+                                            ) {
+                                                return {
+                                                    ...prev,
+                                                    [contextMenu.section]: [...prev[contextMenu.section], newNode],
+                                                };
                                             }
 
-                                            return addChildNode(prev, contextMenu.section.id, newNode);
+                                            // adding under an existing node
+                                            return {
+                                                ...prev,
+                                                [contextMenu.section.sectionKey]: addChildNode(
+                                                    prev[contextMenu.section.sectionKey],
+                                                    contextMenu.section.id,
+                                                    newNode
+                                                ),
+                                            };
+
                                         });
+
 
                                         setContextMenu({ ...contextMenu, visible: false });
                                     }}
@@ -367,31 +467,41 @@ export default function FileManagerLeftSection({ width }) {
                                 </button>
 
 
-                                <button
-                                    className="context-btn block w-full text-left py-1"
-                                    onClick={() => {
-                                        // Ignore library rename for now
-                                        if (contextMenu.section !== 'library') {
-                                            setSubcollections(prev =>
-                                                setEditingNode(prev, contextMenu.section.id)
-                                            );
-                                        }
+                                {/* Only show below for subcollections */}
+                                {!isRootSection && (
+                                    <>
+                                        {/* Rename Button */}
+                                        <button
+                                            className="context-btn block w-full text-left py-1"
+                                            onClick={() => {
+                                                setTrees(prev => ({
+                                                    ...prev,
+                                                    [contextMenu.section.sectionKey]: setEditingNode(
+                                                        prev[contextMenu.section.sectionKey],
+                                                        contextMenu.section.id
+                                                    ),
+                                                }));
+                                                setContextMenu({ ...contextMenu, visible: false });
+                                            }}
+                                        >
+                                            Rename
+                                        </button>
 
-                                        setContextMenu({ ...contextMenu, visible: false });
-                                    }}
-                                >
-                                    Rename
-                                </button>
 
-                                <button className="context-btn block w-full text-left py-1">
-                                    Move To
-                                </button>
-                                <button className="context-btn block w-full text-left py-1">
-                                    Copy To
-                                </button>
-                                <button className="context-btn block w-full text-left py-1">
-                                    Delete Subcollection
-                                </button>
+                                        <button className="context-btn block w-full text-left py-1">
+                                            Move To
+                                        </button>
+                                        <button className="context-btn block w-full text-left py-1">
+                                            Copy To
+                                        </button>
+                                        <button className="context-btn block w-full text-left py-1">
+                                            Delete Subcollection
+                                        </button>
+                                    </>
+                                )}
+
+
+
                             </div>
                         </div>
                     </>

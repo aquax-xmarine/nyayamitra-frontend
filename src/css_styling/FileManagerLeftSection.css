@@ -3,9 +3,10 @@
   display: block;
   width: 100%;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 6px 20px;
   text-align: left;
   -webkit-tap-highlight-color: transparent;
+  border-radius: 7px;
 }
 
 .context-btn:focus,
@@ -40,4 +41,12 @@
 .sidebar-btn:active {
   outline: none;
   box-shadow: none;
+}
+
+.context-btn:hover {
+  background-color: #E0E7FF; /* same as sidebar hover */
+}
+
+.context-btn:active {
+  background-color: #C7D2FE; /* same as sidebar active */
 }
