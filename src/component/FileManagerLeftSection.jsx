@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-
+import { useEffect } from 'react';
+import { containerAPI } from '../services/api';
 import contract_img from '../assets/contract_img.png';
 import search_icon from '../assets/search_icon.png';
 import library_icon from '../assets/library_icon.png';
@@ -33,12 +34,35 @@ export default function FileManagerLeftSection({ width }) {
 
     const fileInputRef = useRef(null);
 
-    const handleFileUpload = (e) => {
+    const handleFileUpload = async (e) => {
         const files = Array.from(e.target.files);
-        console.log('Uploaded files:', files);
+
+        const formData = new FormData();
+        files.forEach(file => formData.append('files', file));
+
+        // which container are we uploading into?
+        if (contextMenu.section === 'library') {
+            formData.append('section', 'library');
+        } else if (contextMenu.section === 'workingCases') {
+            formData.append('section', 'workingCases');
+        } else if (contextMenu.section?.id) {
+            formData.append('containerId', contextMenu.section.id);
+        }
 
 
+        try {
+            await fetch('/api/files/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            alert('Files uploaded!');
+        } catch (err) {
+            console.error(err);
+        }
+        e.target.value = null;
     };
+
 
     const [trees, setTrees] = useState({
         library: [],
@@ -65,6 +89,7 @@ export default function FileManagerLeftSection({ width }) {
             [sectionKey]: toggleNode(prev[sectionKey], id),
         }));
     };
+
 
 
 
@@ -105,6 +130,54 @@ export default function FileManagerLeftSection({ width }) {
     const isRootSection =
         contextMenu.section === 'library' ||
         contextMenu.section === 'workingCases';
+
+
+    function buildTree(rows) {
+        const map = {};
+        const roots = [];
+
+        rows.forEach(row => {
+            map[row.id] = {
+                id: row.id,
+                name: row.name,
+                open: false,
+                editing: false,
+                children: [],
+            };
+        });
+
+        rows.forEach(row => {
+            if (row.parent_id) {
+                map[row.parent_id]?.children.push(map[row.id]);
+            } else {
+                roots.push(map[row.id]);
+            }
+        });
+
+        return roots;
+    }
+
+    useEffect(() => {
+        async function loadContainers() {
+            try {
+                const [library, workingCases] = await Promise.all([
+                    containerAPI.getContainers('library'),
+                    containerAPI.getContainers('workingCases'),
+                ]);
+
+                setTrees({
+                    library: buildTree(library),
+                    workingCases: buildTree(workingCases),
+                });
+            } catch (err) {
+                console.error('Failed to load containers', err);
+            }
+        }
+
+        loadContainers();
+    }, []);
+
+
 
 
 
@@ -151,7 +224,10 @@ export default function FileManagerLeftSection({ width }) {
 
                             }}
 
-                            onBlur={() => {
+                            onBlur={async (e) => {
+                                console.log('BLUR FIRED');
+                                const newName = e.target.value.trim();
+
                                 setTrees(prev => ({
                                     ...prev,
                                     [sectionKey]: stopEditingNode(
@@ -160,7 +236,14 @@ export default function FileManagerLeftSection({ width }) {
                                     ),
                                 }));
 
+                                try {
+                                    await containerAPI.updateContainerName(node.id, newName);
+                                } catch (err) {
+                                    console.error('Failed to rename container', err);
+                                }
                             }}
+
+
 
                             onKeyDown={e => {
                                 if (e.key === 'Enter') e.target.blur();
@@ -185,6 +268,16 @@ export default function FileManagerLeftSection({ width }) {
             </>
         );
     }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -416,51 +509,66 @@ export default function FileManagerLeftSection({ width }) {
                                 {/* SubCollection Button */}
                                 <button
                                     className="context-btn block w-full text-left py-1"
-                                    onClick={() => {
-                                        const newNode = {
-                                            id: Date.now(),
-                                            name: 'New Subcollection',
-                                            editing: true,
-                                            open: false,
-                                            children: [],
-                                        };
-
-                                        if (contextMenu.section === 'library') {
-                                            setLibraryOpen(true);
-                                        }
-
-                                        if (contextMenu.section === 'workingCases') {
-                                            setWorkingCasesOpen(true);
-                                        }
+                                    onClick={async () => {
+                                        const isRoot = typeof contextMenu.section === 'string';
 
 
-                                        setTrees(prev => {
-                                            // adding directly under a root section
-                                            if (
-                                                contextMenu.section === 'library' ||
-                                                contextMenu.section === 'workingCases'
-                                            ) {
-                                                return {
-                                                    ...prev,
-                                                    [contextMenu.section]: [...prev[contextMenu.section], newNode],
-                                                };
-                                            }
+                                        const section = isRoot
+                                            ? contextMenu.section
+                                            : contextMenu.section.sectionKey;
 
-                                            // adding under an existing node
-                                            return {
-                                                ...prev,
-                                                [contextMenu.section.sectionKey]: addChildNode(
-                                                    prev[contextMenu.section.sectionKey],
-                                                    contextMenu.section.id,
-                                                    newNode
-                                                ),
+                                        const parent_id =
+                                            !isRoot && contextMenu.section?.id
+                                                ? contextMenu.section.id
+                                                : null;
+
+
+                                        if (section === 'library') setLibraryOpen(true);
+                                        if (section === 'workingCases') setWorkingCasesOpen(true);
+
+                                        try {
+                                            const saved = await containerAPI.createContainer({
+                                                name: 'New Subcollection',
+                                                section,
+                                                parent_id,
+                                            });
+
+                                            const newNode = {
+                                                id: saved.id,     // ✅ REAL UUID
+                                                name: saved.name,
+                                                editing: true,
+                                                open: false,
+                                                children: [],
                                             };
 
-                                        });
+                                            setTrees(prev => {
+                                                if (!parent_id) {
+                                                    return {
+                                                        ...prev,
+                                                        [section]: [...prev[section], newNode],
+                                                    };
+                                                }
 
+                                                return {
+                                                    ...prev,
+                                                    [section]: addChildNode(
+                                                        prev[section],
+                                                        parent_id,
+                                                        newNode
+                                                    ),
+                                                };
+                                            });
+
+                                        } catch (err) {
+                                            console.error('Failed to create container', err);
+                                        }
 
                                         setContextMenu({ ...contextMenu, visible: false });
                                     }}
+
+
+
+
 
                                 >
                                     New Subcollection

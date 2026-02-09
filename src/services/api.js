@@ -166,4 +166,24 @@ export const lawyerAPI = {
 };
 // End of Lawyer specific APIs
 
+export const containerAPI = {
+  getContainers: async (section) => {
+    const response = await api.get(`/containers?section=${section}`);
+    return response.data;
+  },
+
+  createContainer: async (data) => {
+    const response = await api.post('/containers', data);
+    return response.data;
+  },
+
+  updateContainerName: async (id, name) => {
+  const response = await api.patch(`/containers/${id}`, { name });
+  return response.data;
+}
+
+};
+
+
+
 export default api;
