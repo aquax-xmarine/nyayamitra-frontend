@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fileAPI } from '../services/api';
 
-export default function FileManagerRightSection({ selectedContainerId }) {
+export default function FileManagerRightSection({ selectedContainerId, refreshTrigger}) {
   const [files, setFiles] = useState([]);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function FileManagerRightSection({ selectedContainerId }) {
     }
 
     loadFiles();
-  }, [selectedContainerId]);
+  }, [selectedContainerId, refreshTrigger]);
 
   return (
     <div className="h-full w-full px-4 py-3 overflow-auto">

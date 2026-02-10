@@ -36,6 +36,8 @@ export default function FileManager() {
     }
   };
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   return (
     <div className="flex h-screen overflow-hidden" onMouseMove={resize} onMouseUp={stopResizing}>
 
@@ -68,7 +70,9 @@ export default function FileManager() {
               onSelectContainer={(id) => {
                 console.log('SELECTED CONTAINER ID:', id);
                 setSelectedContainerId(id);
+                
               }}
+              onFilesUploaded={() => setRefreshTrigger(prev => prev + 1)}
             />
 
           </div>
@@ -87,6 +91,7 @@ export default function FileManager() {
             <FileManagerRightSection
               selectedContainerId={selectedContainerId}
               onSelectContainer={(id) => setSelectedContainerId(id)}
+              refreshTrigger={refreshTrigger}
             />
 
           </div>

@@ -13,7 +13,7 @@ import right_arrow from '../assets/right_arrow.png';
 import folder_img from '../assets/folder.png';
 import '../css_styling/FileManagerLeftSection.css';
 
-export default function FileManagerLeftSection({ width, onSelectContainer, selectedContainerId }) {
+export default function FileManagerLeftSection({ width, onSelectContainer, selectedContainerId, onFilesUploaded}) {
     const [activeSection, setActiveSection] = useState(null);
     const [contextMenu, setContextMenu] = useState({
         visible: false,
@@ -53,6 +53,11 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
             await fileAPI.uploadFiles(formData);
             console.log('Upload successful');
             // Optionally refresh the file list here
+
+            // ✅ Trigger refresh
+            if (onFilesUploaded) {
+                onFilesUploaded();
+            }
         } catch (err) {
             console.error('Upload failed:', err);
         }
@@ -305,7 +310,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
             {/* 🔹 Hidden file input (lives here) */}
             <input
                 type="file"
-                
+
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleFileUpload}
