@@ -21,7 +21,7 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
   }, [selectedContainerId, refreshTrigger]);
 
   return (
-    <div className="h-full w-full px-4 py-3 overflow-auto">
+    <div className="h-full w-full pt-10 px-4 py-3 overflow-auto">
       {!selectedContainerId && <p>Select a folder</p>}
       {files.length === 0 && selectedContainerId && <p>No files</p>}
 

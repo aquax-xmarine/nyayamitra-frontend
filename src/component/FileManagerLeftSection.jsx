@@ -298,7 +298,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
     return (
 
         <div
-            className=" px-3 pr-1 pt-1 -ml-2 relative "
+            className=" px-3 pr-1 pt-1 -ml-2 relative h-full flex flex-col"
             style={{
                 width: width, // now comes from props
                 backgroundColor: '#F1EDED',
@@ -315,7 +315,8 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 style={{ display: 'none' }}
                 onChange={handleFileUpload}
             />
-            {/* Header with icon and search */}
+
+            {/* ✅ FIXED HEADER - Image and Search */}
             <div className="flex flex-col gap-2">
                 <img
                     src={contract_img}
@@ -335,8 +336,10 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 </button>
             </div>
 
-            {/* Library Button */}
-            <div className="flex flex-col gap-2 mt-4 pr-1">
+            {/* ✅ SCROLLABLE BODY - All the buttons and folders */}
+            
+            <div className="flex flex-col gap-2 mt-4 pr-1 overflow-y-auto flex-1">
+                {/* Library Button */}
                 <button
                     onClick={() => {
                         setActiveSection('library');
