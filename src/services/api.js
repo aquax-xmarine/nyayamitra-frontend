@@ -166,6 +166,8 @@ export const lawyerAPI = {
 };
 // End of Lawyer specific APIs
 
+
+//container API
 export const containerAPI = {
   getContainers: async (section) => {
     const response = await api.get(`/containers?section=${section}`);
@@ -183,6 +185,40 @@ export const containerAPI = {
 }
 
 };
+
+
+
+//File API
+export const fileAPI = {
+  // Get files for a container
+  getFilesByContainer: async (containerId) => {
+    const response = await api.get(`/files?containerId=${containerId}`);
+    return response.data;
+  },
+
+  // Upload file(s) to a container
+  uploadFiles: async (formData) => {
+    const response = await api.post('/files/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Rename a file (optional, future-safe)
+  renameFile: async (id, name) => {
+    const response = await api.patch(`/files/${id}`, { name });
+    return response.data;
+  },
+
+  // Delete a file
+  deleteFile: async (id) => {
+    const response = await api.delete(`/files/${id}`);
+    return response.data;
+  },
+};
+
 
 
 

@@ -3,8 +3,11 @@ import LoginNavbarAsk from '../component/NavBarProfileAsk.jsx';
 import LoginNavbarIcon from '../component/NavBarProfileIcon';
 import LoginNavbarProfile from '../component/NavBarProfileProfile';
 import FileManagerLeftSection from '../component/FileManagerLeftSection.jsx';
+import FileManagerRightSection from '../component/FileManagerRightSection.jsx';
 
 export default function FileManager() {
+  const [selectedContainerId, setSelectedContainerId] = useState(null);
+
   const containerRef = useRef(null);
 
   // width of left section (px)
@@ -35,14 +38,14 @@ export default function FileManager() {
 
   return (
     <div className="flex h-screen overflow-hidden" onMouseMove={resize} onMouseUp={stopResizing}>
-      
+
       {/* Left Sidebar */}
       <div className="w-16 border-r shrink-0 overflow-y-auto">
         <div className="py-3 px-2">
           <LoginNavbarIcon />
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div ref={containerRef} className="flex-1 flex flex-col overflow-hidden min-w-0">
 
@@ -57,9 +60,17 @@ export default function FileManager() {
           {/* Left section */}
           <div
             className=" px-2 py-1 "
-            style={{ width: leftWidth, backgroundColor: '#F1EDED',  borderTopLeftRadius: '0.5rem', borderBottomLeftRadius: '0.5rem'  }}
+            style={{ width: leftWidth, backgroundColor: '#F1EDED', borderTopLeftRadius: '0.5rem', borderBottomLeftRadius: '0.5rem' }}
           >
-            <FileManagerLeftSection width={leftWidth}/>
+            <FileManagerLeftSection
+              width={leftWidth}
+              selectedContainerId={selectedContainerId}
+              onSelectContainer={(id) => {
+                console.log('SELECTED CONTAINER ID:', id);
+                setSelectedContainerId(id);
+              }}
+            />
+
           </div>
 
           {/* Divider / Drag handle */}
@@ -71,9 +82,13 @@ export default function FileManager() {
           {/* Right section */}
           <div
             className="overflow-auto px-4 py-4 flex-1"
-            style={{ backgroundColor: '#F7F2F2',  borderTopRightRadius: '0.5rem', borderBottomRightRadius: '0.5rem'}}
+            style={{ backgroundColor: '#F7F2F2', borderTopRightRadius: '0.5rem', borderBottomRightRadius: '0.5rem' }}
           >
-           
+            <FileManagerRightSection
+              selectedContainerId={selectedContainerId}
+              onSelectContainer={(id) => setSelectedContainerId(id)}
+            />
+
           </div>
 
         </div>

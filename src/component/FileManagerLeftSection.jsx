@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useEffect } from 'react';
-import { containerAPI } from '../services/api';
+import { containerAPI, fileAPI } from '../services/api';
 import contract_img from '../assets/contract_img.png';
 import search_icon from '../assets/search_icon.png';
 import library_icon from '../assets/library_icon.png';
@@ -13,7 +13,7 @@ import right_arrow from '../assets/right_arrow.png';
 import folder_img from '../assets/folder.png';
 import '../css_styling/FileManagerLeftSection.css';
 
-export default function FileManagerLeftSection({ width }) {
+export default function FileManagerLeftSection({ width, onSelectContainer, selectedContainerId }) {
     const [activeSection, setActiveSection] = useState(null);
     const [contextMenu, setContextMenu] = useState({
         visible: false,
@@ -34,33 +34,28 @@ export default function FileManagerLeftSection({ width }) {
 
     const fileInputRef = useRef(null);
 
+
+
     const handleFileUpload = async (e) => {
         const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        if (!selectedContainerId) {
+            console.warn('No container selected');
+            return;
+        }
 
         const formData = new FormData();
         files.forEach(file => formData.append('files', file));
-
-        // which container are we uploading into?
-        if (contextMenu.section === 'library') {
-            formData.append('section', 'library');
-        } else if (contextMenu.section === 'workingCases') {
-            formData.append('section', 'workingCases');
-        } else if (contextMenu.section?.id) {
-            formData.append('containerId', contextMenu.section.id);
-        }
-
+        formData.append('containerId', selectedContainerId);
 
         try {
-            await fetch('/api/files/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            alert('Files uploaded!');
+            await fileAPI.uploadFiles(formData);
+            console.log('Upload successful');
+            // Optionally refresh the file list here
         } catch (err) {
-            console.error(err);
+            console.error('Upload failed:', err);
         }
-        e.target.value = null;
     };
 
 
@@ -184,7 +179,9 @@ export default function FileManagerLeftSection({ width }) {
 
 
 
-    function CollectionNode({ node, level, sectionKey }) {
+
+
+    function CollectionNode({ node, level, sectionKey, onSelectContainer }) {
         return (
             <>
                 <button
@@ -192,11 +189,21 @@ export default function FileManagerLeftSection({ width }) {
                         e.stopPropagation();
                         setActiveSection(null);
                         setActiveNodeId(node.id);
+
+                        onSelectContainer(node.id);
+
                         toggle(sectionKey, node.id);
                     }}
-                    onContextMenu={(e) =>
-                        handleRightClick(e, { ...node, sectionKey })
-                    }
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+
+                        // ✅ select container on right-click
+                        setActiveNodeId(node.id);
+                        onSelectContainer(node.id);
+
+                        // open context menu
+                        handleRightClick(e, { ...node, sectionKey });
+                    }}
 
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 
         ${activeNodeId === node.id ? 'active' : ''}`}
@@ -262,6 +269,7 @@ export default function FileManagerLeftSection({ width }) {
                             node={child}
                             level={level + 1}
                             sectionKey={sectionKey}
+                            onSelectContainer={onSelectContainer}
                         />
                     ))}
 
@@ -297,7 +305,7 @@ export default function FileManagerLeftSection({ width }) {
             {/* 🔹 Hidden file input (lives here) */}
             <input
                 type="file"
-                multiple
+                
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleFileUpload}
@@ -359,6 +367,7 @@ export default function FileManagerLeftSection({ width }) {
                             node={node}
                             level={1}
                             sectionKey="library"
+                            onSelectContainer={onSelectContainer}
                         />
                     ))}
 
@@ -398,6 +407,7 @@ export default function FileManagerLeftSection({ width }) {
                             node={node}
                             level={1}
                             sectionKey="workingCases"
+                            onSelectContainer={onSelectContainer}
                         />
                     ))}
 
@@ -514,6 +524,7 @@ export default function FileManagerLeftSection({ width }) {
 
 
                                         const section = isRoot
+
                                             ? contextMenu.section
                                             : contextMenu.section.sectionKey;
 
