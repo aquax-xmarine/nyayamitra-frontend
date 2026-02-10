@@ -4,8 +4,13 @@ import LoginNavbarIcon from '../component/NavBarProfileIcon';
 import LoginNavbarProfile from '../component/NavBarProfileProfile';
 import FileManagerLeftSection from '../component/FileManagerLeftSection.jsx';
 import FileManagerRightSection from '../component/FileManagerRightSection.jsx';
+import cross_img from '../assets/cross_img.png';
+import files_img from '../assets/files_img.png';
+import folder from '../assets/folder.png';
 
 export default function FileManager() {
+
+
   const [openTabs, setOpenTabs] = useState([]);
 
   const [activeTabId, setActiveTabId] = useState(null);
@@ -20,6 +25,8 @@ export default function FileManager() {
   const [leftWidth, setLeftWidth] = useState(300); // default 30%
 
   const isResizing = useRef(false);
+
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const startResizing = (e) => {
     isResizing.current = true;
@@ -42,6 +49,27 @@ export default function FileManager() {
     }
   };
 
+  const activeTab = openTabs.find(t => t.id === activeTabId);
+
+  function handleOpenFolder(folder) {
+    setOpenTabs(prev => {
+      // remove existing folder tab
+      const fileTabs = prev.filter(t => t.type === 'file');
+
+      return [
+        {
+          id: folder.id,
+          name: folder.name,
+          type: 'folder',
+        },
+        ...fileTabs,
+      ];
+    });
+
+    setActiveTabId(folder.id);
+    setIsPreviewMode(false);
+  }
+
   function handleOpenFile(file) {
     setOpenTabs(prev => {
       const exists = prev.find(f => f.id === file.id);
@@ -50,41 +78,85 @@ export default function FileManager() {
     });
 
     setActiveTabId(file.id);
+    setIsPreviewMode(true);
   }
 
 
   function FileTabs({ openTabs, activeTabId, onSelect, onClose }) {
     return (
-      <div className="flex border-b bg-gray-100">
-        {openTabs.map(file => (
-          <div
-            key={file.id}
-            className={`px-4 py-2 cursor-pointer flex items-center gap-2
-            ${file.id === activeTabId ? 'bg-white border-t border-l border-r' : ''}`}
-            onClick={() => onSelect(file.id)}
-          >
-            <span className="truncate max-w-[150px]">{file.name}</span>
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                onClose(file.id);
-              }}
+      <div className="flex items-end bg-gray-100 pb-1">
+        {openTabs.map(tab => {
+          const isActive = tab.id === activeTabId;
+          const isFolder = tab.type === 'folder';
+
+          return (
+            <div
+              key={tab.id}
+              onClick={() => onSelect(tab.id)}
+              className={`
+        flex items-center gap-1
+        px-3 py-1 text-xs
+        cursor-pointer rounded-md
+        ${isActive ? 'bg-white border border-gray-200' : 'hover:bg-gray-200'}
+      `}
             >
-              ✕
-            </button>
-          </div>
-        ))}
+              <span className="flex items-center gap-1 truncate max-w-[110px]">
+                <img
+                  src={isFolder ? folder : files_img}
+                  alt={isFolder ? 'folder' : 'file'}
+                  className={`shrink-0 ${isFolder ? 'w-3 h-3' : 'w-4 h-4'
+                    }`}
+                />
+                <span className="truncate">{tab.name}</span>
+              </span>
+
+              {!isFolder && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    onClose(tab.id);
+                  }}
+                  className="ml-1 flex items-center justify-center"
+                  style={{
+                    outline: 'none',
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    margin: 0,
+                    lineHeight: 0,
+                    height: 'auto'
+                  }}
+                >
+                  <img
+                    src={cross_img}
+                    className="w-3 h-3"
+                    style={{
+                      display: 'block',
+                      padding: 0,
+                      margin: 0,
+                      lineHeight: 0,
+                      verticalAlign: 'top'
+                    }}
+                  />
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   }
 
   function FilePreview({ file }) {
-    if (!file) return null;
+    if (!file) {
+      return null;
+    }
+
 
     return (
-      <div className="h-64 border-b">
+      <div className="flex-1 w-full">
         <iframe
-          src={`https://localhost:5000/uploads/${file.file_path}`}
+          src={`https://localhost:5000/uploads/${file.file_path}#toolbar=0`}
           className="w-full h-full"
           title={file.name}
         />
@@ -93,11 +165,18 @@ export default function FileManager() {
   }
 
   function closeTab(id) {
-    setOpenTabs(prev => prev.filter(f => f.id !== id));
+    setOpenTabs(prev => {
+      const updated = prev.filter(f => f.id !== id);
 
-    setActiveTabId(prev =>
-      prev === id ? openTabs[0]?.id ?? null : prev
-    );
+      if (updated.length === 0) {
+        setIsPreviewMode(false); // 👈 EXIT preview mode
+        setActiveTabId(null);
+      } else if (activeTabId === id) {
+        setActiveTabId(updated[0].id);
+      }
+
+      return updated;
+    });
   }
 
 
@@ -124,50 +203,73 @@ export default function FileManager() {
         <div className="flex flex-1 overflow-hidden px-2 rounded-lg">
 
           {/* Left section */}
-          <div
-            className=" px-2 py-1 "
-            style={{ width: leftWidth, backgroundColor: '#F1EDED', borderTopLeftRadius: '0.5rem', borderBottomLeftRadius: '0.5rem' }}
-          >
-            <FileManagerLeftSection
-              width={leftWidth}
-              selectedContainerId={selectedContainerId}
-              onSelectContainer={(id) => {
-                console.log('SELECTED CONTAINER ID:', id);
-                setSelectedContainerId(id);
-
+          {!isPreviewMode && (
+            <div
+              className="px-2 py-1"
+              style={{
+                width: leftWidth,
+                backgroundColor: '#F1EDED',
+                borderTopLeftRadius: '0.5rem',
+                borderBottomLeftRadius: '0.5rem',
               }}
-              onFilesUploaded={() => setRefreshTrigger(prev => prev + 1)}
-            />
-
-          </div>
+            >
+              <FileManagerLeftSection
+                onSelectContainer={(folder) => {
+                  setSelectedContainerId(folder.id);
+                  handleOpenFolder(folder);
+                }}
+                selectedContainerId={selectedContainerId}
+                onFilesUploaded={() => setRefreshTrigger(prev => prev + 1)}
+              />
+            </div>
+          )}
 
           {/* Divider / Drag handle */}
-          <div
-            className="w-1 bg-gray-300 cursor-col-resize"
-            onMouseDown={startResizing}
-          />
+          {!isPreviewMode && (
+            <div
+              className="w-1 bg-gray-300 cursor-col-resize"
+              onMouseDown={startResizing}
+            />
+          )}
 
           {/* Right section */}
           <div
-            className="overflow-auto px-4 py-4 flex-1"
-            style={{ backgroundColor: '#F7F2F2', borderTopRightRadius: '0.5rem', borderBottomRightRadius: '0.5rem' }}
+            className="flex-1 flex flex-col overflow-hidden"
+            style={{
+              backgroundColor: '#F7F2F2',
+              borderTopRightRadius: '0.5rem',
+              borderBottomRightRadius: '0.5rem',
+              ...(isPreviewMode ? {} : { padding: '1rem' })
+            }}
           >
             <FileTabs
               openTabs={openTabs}
               activeTabId={activeTabId}
-              onSelect={setActiveTabId}
+              onSelect={(tabId) => {
+                setActiveTabId(tabId);
+                // ✅ Check if the selected tab is a folder or file
+                const selectedTab = openTabs.find(t => t.id === tabId);
+                if (selectedTab?.type === 'folder') {
+                  setIsPreviewMode(false);
+                  setSelectedContainerId(selectedTab.id);
+                } else if (selectedTab?.type === 'file') {
+                  setIsPreviewMode(true);
+                }
+              }}
               onClose={closeTab}
             />
 
-            <FilePreview
-              file={openTabs.find(f => f.id === activeTabId)}
-            />
+            {activeTab?.type === 'file' && (
+              <FilePreview file={activeTab} />
+            )}
 
-            <FileManagerRightSection
-              selectedContainerId={selectedContainerId}
-              refreshTrigger={refreshTrigger}
-              onOpenFile={handleOpenFile}
-            />
+            {!isPreviewMode && (
+              <FileManagerRightSection
+                selectedContainerId={selectedContainerId}
+                refreshTrigger={refreshTrigger}
+                onOpenFile={handleOpenFile}
+              />
+            )}
 
           </div>
 

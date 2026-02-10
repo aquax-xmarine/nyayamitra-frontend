@@ -13,7 +13,7 @@ import right_arrow from '../assets/right_arrow.png';
 import folder_img from '../assets/folder.png';
 import '../css_styling/FileManagerLeftSection.css';
 
-export default function FileManagerLeftSection({ width, onSelectContainer, selectedContainerId, onFilesUploaded}) {
+export default function FileManagerLeftSection({ width, onSelectContainer, selectedContainerId, onFilesUploaded }) {
     const [activeSection, setActiveSection] = useState(null);
     const [contextMenu, setContextMenu] = useState({
         visible: false,
@@ -177,16 +177,82 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
         loadContainers();
     }, []);
 
+    useEffect(() => {
+    if (selectedContainerId) {
+        setActiveNodeId(selectedContainerId);
+
+        // Check which section and open it
+        const checkSection = (nodes) => {
+            for (const node of nodes) {
+                if (node.id === selectedContainerId) return true;
+                if (node.children.length > 0 && checkSection(node.children)) return true;
+            }
+            return false;
+        };
+
+        if (checkSection(trees.library)) {
+            setLibraryOpen(true);
+            expandToNode('library', selectedContainerId);  // ✅ Add this line
+        } else if (checkSection(trees.workingCases)) {
+            setWorkingCasesOpen(true);
+            expandToNode('workingCases', selectedContainerId);  // ✅ Add this line
+        }
+    }
+}, [selectedContainerId, trees]);
+
+
+    // Add this function after your other helper functions (around line 130)
+    const expandNodePath = (nodes, targetId, path = []) => {
+        for (const node of nodes) {
+            if (node.id === targetId) {
+                return [...path, node.id];
+            }
+            if (node.children.length > 0) {
+                const found = expandNodePath(node.children, targetId, [...path, node.id]);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    const expandToNode = (sectionKey, nodeId) => {
+        setTrees(prev => {
+            const path = expandNodePath(prev[sectionKey], nodeId);
+            if (!path) return prev;
+
+            let updated = [...prev[sectionKey]];
+
+            // Open all nodes in the path except the last one (the target node itself)
+            path.slice(0, -1).forEach(id => {
+                updated = updated.map(node => setNodeOpen(node, id, true));
+            });
+
+            return {
+                ...prev,
+                [sectionKey]: updated
+            };
+        });
+    };
+
+    const setNodeOpen = (node, id, open) => {
+        if (node.id === id) {
+            return { ...node, open };
+        }
+        if (node.children.length > 0) {
+            return {
+                ...node,
+                children: node.children.map(child => setNodeOpen(child, id, open))
+            };
+        }
+        return node;
+    };
 
 
 
 
 
 
-
-
-
-    function CollectionNode({ node, level, sectionKey, onSelectContainer }) {
+    function CollectionNode({ node, level, sectionKey, onSelectContainer, selectedContainerId }) {
         return (
             <>
                 <button
@@ -194,8 +260,8 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                         e.stopPropagation();
                         setActiveSection(null);
                         setActiveNodeId(node.id);
-
-                        onSelectContainer(node.id);
+                        console.log('Selected container ID:', node.id);
+                        onSelectContainer(node);
 
                         toggle(sectionKey, node.id);
                     }}
@@ -204,14 +270,14 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
 
                         // ✅ select container on right-click
                         setActiveNodeId(node.id);
-                        onSelectContainer(node.id);
+                        onSelectContainer(node);
 
                         // open context menu
                         handleRightClick(e, { ...node, sectionKey });
                     }}
 
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 
-        ${activeNodeId === node.id ? 'active' : ''}`}
+    ${(activeNodeId === node.id || selectedContainerId === node.id) ? 'active' : ''}`}
                     style={{ paddingLeft: 23 + level * 15, fontWeight: 400 }}
                 >
                     <img
@@ -275,6 +341,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                             level={level + 1}
                             sectionKey={sectionKey}
                             onSelectContainer={onSelectContainer}
+                            selectedContainerId={selectedContainerId}
                         />
                     ))}
 
@@ -337,7 +404,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
             </div>
 
             {/* ✅ SCROLLABLE BODY - All the buttons and folders */}
-            
+
             <div className="flex flex-col gap-2 mt-4 pr-1 overflow-y-auto flex-1">
                 {/* Library Button */}
                 <button
@@ -376,6 +443,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                             level={1}
                             sectionKey="library"
                             onSelectContainer={onSelectContainer}
+                            selectedContainerId={selectedContainerId}
                         />
                     ))}
 
@@ -416,6 +484,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                             level={1}
                             sectionKey="workingCases"
                             onSelectContainer={onSelectContainer}
+                            selectedContainerId={selectedContainerId}
                         />
                     ))}
 
