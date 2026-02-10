@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fileAPI } from '../services/api';
 
-export default function FileManagerRightSection({ selectedContainerId, refreshTrigger }) {
+export default function FileManagerRightSection({ selectedContainerId, refreshTrigger, onOpenFile }) {
   const [files, setFiles] = useState([]);
 
   useEffect(() => {
@@ -27,14 +27,12 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
 
       {files.map(file => (
         <div key={file.id}>
-          <a
-            href={`https://localhost:5000/uploads/${file.file_path}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline"
+          <button
+            onClick={() => onOpenFile(file)}
+            className="text-blue-600 underline text-left"
           >
             {file.name}
-          </a>
+          </button>
         </div>
       ))}
     </div>
