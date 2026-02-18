@@ -3,11 +3,11 @@ import ReactMarkdown from 'react-markdown';
 import SendIcon from '../assets/send.png';
 import addIcon from '../assets/add.png';
 
-const AskQuestion = ({ onAskQuestion, question, answer, loading, error }) => {
+const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialFile = null }) => {
   const [inputValue, setInputValue] = useState('');
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [attachedFiles, setAttachedFiles] = useState(initialFile ? [initialFile] : []);
   const canSend = (!loading) && (inputValue.trim() || attachedFiles.length > 0);
 
 
@@ -28,9 +28,34 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error }) => {
       const formData = new FormData();
       formData.append('question', inputValue);
 
-      attachedFiles.forEach(file => {
-        formData.append('files', file); // 👈 SAME FIELD NAME
-      });
+      // Loop over attached files
+      for (let file of attachedFiles) {
+        // Check if it's a real File (from input)
+        if (file instanceof File) {
+          formData.append('files', file);
+        } else if (file.file_path) {
+          // It's a FileManager file object → fetch it as Blob
+
+          if (file.file_path) {
+            const response = await fetch(`https://localhost:5000/uploads/${file.file_path}`);
+            const blob = await response.blob();
+
+            // Determine MIME type from file extension
+            const extension = file.name.split('.').pop().toLowerCase();
+            let mimeType = '';
+            if (extension === 'pdf') mimeType = 'application/pdf';
+            else if (extension === 'doc') mimeType = 'application/msword';
+            else if (extension === 'docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            else if (extension === 'txt') mimeType = 'text/plain';
+
+            formData.append('files', new File([blob], file.name, { type: mimeType }));
+          }
+        }
+      }
+
+
+
+
 
 
       const response = await fetch('https://localhost:5000/api/ask', {
@@ -137,7 +162,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error }) => {
 
           <div className="flex flex-col flex-1">
             {attachedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-1">
+              <div className="flex flex-wrap gap-2 mb-1 ">
                 {attachedFiles.map((file, index) => (
                   <div
                     key={index}

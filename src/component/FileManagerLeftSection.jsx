@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useEffect } from 'react';
 import { containerAPI, fileAPI } from '../services/api';
-import contract_img from '../assets/contract_img.png';
 import search_icon from '../assets/search_icon.png';
 import library_icon from '../assets/library_icon.png';
 import bookmark_icon from '../assets/bookmark_icon.png';
@@ -52,9 +51,9 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
         try {
             await fileAPI.uploadFiles(formData);
             console.log('Upload successful');
-            // Optionally refresh the file list here
+            
 
-            // ✅ Trigger refresh
+            // Trigger refresh
             if (onFilesUploaded) {
                 onFilesUploaded();
             }
@@ -125,7 +124,6 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 : { ...node, children: stopEditingNode(node.children, id) }
         );
 
-    const [activeNodeId, setActiveNodeId] = useState(null);
 
     const isRootSection =
         contextMenu.section === 'library' ||
@@ -178,30 +176,30 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
     }, []);
 
     useEffect(() => {
-    if (selectedContainerId) {
-        setActiveNodeId(selectedContainerId);
+        if (selectedContainerId) {
+        
 
-        // Check which section and open it
-        const checkSection = (nodes) => {
-            for (const node of nodes) {
-                if (node.id === selectedContainerId) return true;
-                if (node.children.length > 0 && checkSection(node.children)) return true;
+            // Check which section and open it
+            const checkSection = (nodes) => {
+                for (const node of nodes) {
+                    if (node.id === selectedContainerId) return true;
+                    if (node.children.length > 0 && checkSection(node.children)) return true;
+                }
+                return false;
+            };
+
+            if (checkSection(trees.library)) {
+                setLibraryOpen(true);
+                expandToNode('library', selectedContainerId);  
+            } else if (checkSection(trees.workingCases)) {
+                setWorkingCasesOpen(true);
+                expandToNode('workingCases', selectedContainerId);  
             }
-            return false;
-        };
-
-        if (checkSection(trees.library)) {
-            setLibraryOpen(true);
-            expandToNode('library', selectedContainerId);  // ✅ Add this line
-        } else if (checkSection(trees.workingCases)) {
-            setWorkingCasesOpen(true);
-            expandToNode('workingCases', selectedContainerId);  // ✅ Add this line
         }
-    }
-}, [selectedContainerId, trees]);
+    }, [selectedContainerId]);
 
 
-    // Add this function after your other helper functions (around line 130)
+    
     const expandNodePath = (nodes, targetId, path = []) => {
         for (const node of nodes) {
             if (node.id === targetId) {
@@ -258,31 +256,30 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        setActiveSection(null);
-                        setActiveNodeId(node.id);
-                        console.log('Selected container ID:', node.id);
                         onSelectContainer(node);
-
-                        toggle(sectionKey, node.id);
+                        setActiveSection(null);
                     }}
                     onContextMenu={(e) => {
                         e.preventDefault();
 
-                        // ✅ select container on right-click
-                        setActiveNodeId(node.id);
-                        onSelectContainer(node);
+                        
 
                         // open context menu
                         handleRightClick(e, { ...node, sectionKey });
                     }}
 
                     className={`sidebar-btn px-3 py-1 text-xs flex items-center gap-2 
-    ${(activeNodeId === node.id || selectedContainerId === node.id) ? 'active' : ''}`}
+    ${selectedContainerId === node.id ? 'active' : ''}`}
                     style={{ paddingLeft: 23 + level * 15, fontWeight: 400 }}
                 >
                     <img
                         src={right_arrow}
                         className={`w-2 h-4 transition-transform ${node.open ? 'rotate-90' : ''}`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggle(sectionKey, node.id);
+                            onSelectContainer(node);
+                        }}
                     />
                     <img src={folder_img} alt="" className="w-3 h-3" />
                     {node.editing ? (
@@ -383,13 +380,9 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 onChange={handleFileUpload}
             />
 
-            {/* ✅ FIXED HEADER - Image and Search */}
-            <div className="flex flex-col gap-2">
-                <img
-                    src={contract_img}
-                    alt="icon"
-                    className="w-4 h-4 cursor-pointer self-end"
-                />
+            {/*  FIXED HEADER - Image and Search */}
+            <div className="flex flex-col gap-2 mt-3">
+                
                 <button
                     className="w-full max-w-[98%] inline-flex items-center justify-between"
                     style={{ height: '26px', fontSize: '12px', backgroundColor: '#D9D9D9', color: '#4C4B4B', borderRadius: '7px', borderColor: '#4C4B4B' }}
@@ -403,14 +396,14 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 </button>
             </div>
 
-            {/* ✅ SCROLLABLE BODY - All the buttons and folders */}
+            {/*  SCROLLABLE BODY - All the buttons and folders */}
 
             <div className="flex flex-col gap-2 mt-4 pr-1 overflow-y-auto flex-1">
                 {/* Library Button */}
                 <button
                     onClick={() => {
                         setActiveSection('library');
-                        setActiveNodeId(null);
+                        
                         setLibraryOpen(prev => !prev);
                     }}
                     onContextMenu={(e) => handleRightClick(e, 'library')}
@@ -453,7 +446,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 <button
                     onClick={() => {
                         setActiveSection('workingCases');
-                        setActiveNodeId(null);
+                      
                         setWorkingCasesOpen(prev => !prev);
                     }}
                     onContextMenu={(e) => handleRightClick(e, 'workingCases')}

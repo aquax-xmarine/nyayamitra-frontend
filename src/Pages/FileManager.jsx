@@ -42,7 +42,7 @@ export default function FileManager() {
       const containerLeft = containerRef.current.getBoundingClientRect().left;
       const newWidth = e.clientX - containerLeft;
       const containerWidth = containerRef.current.clientWidth;
-      // optional: clamp width between 100px and containerWidth-100
+
       if (newWidth > 100 && newWidth < containerWidth - 100) {
         setLeftWidth(newWidth);
       }
@@ -52,6 +52,7 @@ export default function FileManager() {
   const activeTab = openTabs.find(t => t.id === activeTabId);
 
   function handleOpenFolder(folder) {
+    setSelectedContainerId(folder.id);
     setOpenTabs(prev => {
       // remove existing folder tab
       const fileTabs = prev.filter(t => t.type === 'file');
@@ -84,7 +85,11 @@ export default function FileManager() {
 
   function FileTabs({ openTabs, activeTabId, onSelect, onClose }) {
     return (
-      <div className="flex items-end bg-gray-100 pb-1">
+      // Container for all tabs
+      <div
+        className="flex items-end rounded-md"
+        style={{ backgroundColor: '#448AFF1A' }} // <-- container background
+      >
         {openTabs.map(tab => {
           const isActive = tab.id === activeTabId;
           const isFolder = tab.type === 'folder';
@@ -93,19 +98,25 @@ export default function FileManager() {
             <div
               key={tab.id}
               onClick={() => onSelect(tab.id)}
-              className={`
-        flex items-center gap-1
-        px-3 py-1 text-xs
-        cursor-pointer rounded-md
-        ${isActive ? 'bg-white border border-gray-200' : 'hover:bg-gray-200'}
-      `}
+              className="flex items-center gap-1 px-3 py-1 text-xs cursor-pointer rounded-md"
+              style={{
+                backgroundColor: isActive ? '#448AFF4D' : 'transparent', // only active tab highlighted
+                border: isActive ? '1px solid #E5E7EB' : 'none',
+                transition: 'background-color 0.2s', // smooth hover
+                fontSize: '12px',
+              }}
+              onMouseEnter={e => {
+                if (!isActive) e.currentTarget.style.backgroundColor = '#448AFF0D'; // subtle hover
+              }}
+              onMouseLeave={e => {
+                if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; // reset
+              }}
             >
               <span className="flex items-center gap-1 truncate max-w-[110px]">
                 <img
                   src={isFolder ? folder : files_img}
                   alt={isFolder ? 'folder' : 'file'}
-                  className={`shrink-0 ${isFolder ? 'w-3 h-3' : 'w-4 h-4'
-                    }`}
+                  className={`shrink-0 ${isFolder ? 'w-3 h-3' : 'w-4 h-4'}`}
                 />
                 <span className="truncate">{tab.name}</span>
               </span>
@@ -124,7 +135,7 @@ export default function FileManager() {
                     padding: 0,
                     margin: 0,
                     lineHeight: 0,
-                    height: 'auto'
+                    height: 'auto',
                   }}
                 >
                   <img
@@ -135,7 +146,7 @@ export default function FileManager() {
                       padding: 0,
                       margin: 0,
                       lineHeight: 0,
-                      verticalAlign: 'top'
+                      verticalAlign: 'top',
                     }}
                   />
                 </button>
@@ -145,6 +156,7 @@ export default function FileManager() {
         })}
       </div>
     );
+
   }
 
   function FilePreview({ file }) {
@@ -169,7 +181,7 @@ export default function FileManager() {
       const updated = prev.filter(f => f.id !== id);
 
       if (updated.length === 0) {
-        setIsPreviewMode(false); // 👈 EXIT preview mode
+        setIsPreviewMode(false); // EXIT preview mode
         setActiveTabId(null);
       } else if (activeTabId === id) {
         setActiveTabId(updated[0].id);
@@ -182,7 +194,7 @@ export default function FileManager() {
 
 
   return (
-    <div className="flex h-screen overflow-hidden" onMouseMove={resize} onMouseUp={stopResizing}>
+    <div className="flex h-screen overflow-hidden relative" onMouseMove={resize} onMouseUp={stopResizing}>
 
       {/* Left Sidebar */}
       <div className="w-16 border-r shrink-0 overflow-y-auto">
@@ -191,11 +203,11 @@ export default function FileManager() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - now goes full width minus left sidebar */}
       <div ref={containerRef} className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* Top Navbar */}
-        <div className="flex items-center justify-between p-4">
+        {/* Top Navbar - now wrapped to leave space for right sidebar */}
+        <div className="flex items-center justify-between p-4 pr-[136px] bg-white z-10">
           <LoginNavbarAsk />
         </div>
 
@@ -203,14 +215,17 @@ export default function FileManager() {
         <div className="flex flex-1 overflow-hidden px-2 rounded-lg">
 
           {/* Left section */}
-          {!isPreviewMode && (
+          <div
+            className="transition-all duration-200"
+            style={{ width: isPreviewMode ? 0 : leftWidth, overflow: 'hidden' }}
+          >
             <div
               className="px-2 py-1"
               style={{
-                width: leftWidth,
                 backgroundColor: '#F1EDED',
                 borderTopLeftRadius: '0.5rem',
                 borderBottomLeftRadius: '0.5rem',
+                height: '100%',
               }}
             >
               <FileManagerLeftSection
@@ -222,24 +237,21 @@ export default function FileManager() {
                 onFilesUploaded={() => setRefreshTrigger(prev => prev + 1)}
               />
             </div>
-          )}
+          </div>
 
-          {/* Divider / Drag handle */}
+          {/* Divider */}
           {!isPreviewMode && (
-            <div
-              className="w-1 bg-gray-300 cursor-col-resize"
-              onMouseDown={startResizing}
-            />
+            <div className="w-1 bg-gray-300 cursor-col-resize" onMouseDown={startResizing} />
           )}
 
-          {/* Right section */}
+          {/* Right section - full width, profile floats on top */}
           <div
             className="flex-1 flex flex-col overflow-hidden"
             style={{
               backgroundColor: '#F7F2F2',
               borderTopRightRadius: '0.5rem',
               borderBottomRightRadius: '0.5rem',
-              ...(isPreviewMode ? {} : { padding: '1rem' })
+              ...(isPreviewMode ? { padding: '0.5rem' } : { padding: '0.5rem' })
             }}
           >
             <FileTabs
@@ -247,7 +259,6 @@ export default function FileManager() {
               activeTabId={activeTabId}
               onSelect={(tabId) => {
                 setActiveTabId(tabId);
-                // ✅ Check if the selected tab is a folder or file
                 const selectedTab = openTabs.find(t => t.id === tabId);
                 if (selectedTab?.type === 'folder') {
                   setIsPreviewMode(false);
@@ -259,9 +270,7 @@ export default function FileManager() {
               onClose={closeTab}
             />
 
-            {activeTab?.type === 'file' && (
-              <FilePreview file={activeTab} />
-            )}
+            {activeTab?.type === 'file' && <FilePreview file={activeTab} />}
 
             {!isPreviewMode && (
               <FileManagerRightSection
@@ -270,15 +279,14 @@ export default function FileManager() {
                 onOpenFile={handleOpenFile}
               />
             )}
-
           </div>
 
         </div>
       </div>
 
-      {/* Right Sidebar */}
-      <div className="w-[120px] shrink-0">
-        <div className="px-4 py-2">
+      {/* Right Sidebar - absolutely positioned so it floats OVER the right section */}
+      <div className="absolute top-0 right-0 w-[120px] h-full z-20 pointer-events-none">
+        <div className="px-4 py-2 pointer-events-auto">
           <LoginNavbarProfile />
         </div>
       </div>

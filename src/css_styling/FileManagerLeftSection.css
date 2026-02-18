@@ -9,6 +9,19 @@
   border-radius: 7px;
 }
 
+.context-btn {
+  all: unset;
+  display: flex;        /* changed from block */
+  align-items: center;  /* add this */
+  gap: 15px;             /* add this */
+  width: 100%;
+  cursor: pointer;
+  padding: 6px 20px;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 7px;
+}
+
 .context-btn:focus,
 .context-btn:focus-visible,
 .context-btn:active {
@@ -28,12 +41,12 @@
 
 /* 👇 THIS is the hover highlight */
 .sidebar-btn:hover {
-  background-color: #E0E7FF;
+  background-color: #448AFF0D;
 }
 
 /* 👇 THIS is the clicked (active) highlight */
 .sidebar-btn.active {
-  background-color: #C7D2FE;
+  background-color: #448AFF4D;
 }
 
 .sidebar-btn:focus,
@@ -44,9 +57,18 @@
 }
 
 .context-btn:hover {
-  background-color: #E0E7FF; /* same as sidebar hover */
+  background-color: #448AFF0D; /* same as sidebar hover */
 }
 
 .context-btn:active {
-  background-color: #C7D2FE; /* same as sidebar active */
+  background-color: #448AFF4D; /* same as sidebar active */
+}
+
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.left-section {
+  transform-origin: left;
+  transition: transform 0.2s;
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";  // Add this
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import LoginNavbarAsk from '../component/AskQuestion.jsx';
 import LoginNavbarIcon from '../component/NavBarProfileIcon';
 import LoginNavbarProfile from '../component/NavBarProfileProfile';
@@ -8,10 +8,17 @@ import { askNyayaLM } from '../services/nyayalm';  // Add this
 
 const Dashboard = () => {
   // Add these state variables
+
+  const location = useLocation();
+  const selectedFile = location.state?.file || null;
+
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+
+
   // Add this function
   const handleAskQuestion = async (userQuestion) => {
     setQuestion(userQuestion);
@@ -56,6 +63,7 @@ const Dashboard = () => {
             answer={answer}
             loading={loading}
             error={error}
+            initialFile={selectedFile}
           />
 
         
