@@ -1,14 +1,11 @@
-import { useState } from "react";  // Add this
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import LoginNavbarAsk from '../component/AskQuestion.jsx';
 import LoginNavbarIcon from '../component/NavBarProfileIcon';
 import LoginNavbarProfile from '../component/NavBarProfileProfile';
-import { askNyayaLM } from '../services/nyayalm';  // Add this
-
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
-  // Add these state variables
-
   const location = useLocation();
   const selectedFile = location.state?.file || null;
 
@@ -16,60 +13,44 @@ const Dashboard = () => {
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [questionFiles, setQuestionFiles] = useState([]);
+  const { user } = useAuth();
 
-
-
-  // Add this function
-  const handleAskQuestion = async (userQuestion) => {
+  //  Simply receive question + answer from AskQuestion component
+  const handleAskQuestion = (userQuestion, groqAnswer, files) => {
+    if (groqAnswer) {
+    //  Second call - answer is ready
+    setAnswer(groqAnswer);
+  } else {
+    //  First call - show question + files immediately
     setQuestion(userQuestion);
-    setLoading(true);
-    setError('');
-    setAnswer('');
+    setQuestionFiles(files || []);
+    setAnswer(''); // clear previous answer
+  }
 
-    try {
-      const data = await askNyayaLM(userQuestion);
-
-      if (data.success) {
-        setAnswer(data.answer);
-      } else {
-        setError(data.error || 'Failed to get answer');
-      }
-    } catch (err) {
-      setError('Error connecting to API. Make sure the backend is running!');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
   };
-
-
-
 
   return (
     <div className='flex h-screen overflow-hidden'>
-      {/* Left Sidebar - Icon Navigation */}
       <div className='w-16 border-r shrink-0 overflow-y-auto'>
         <div className='py-3 px-2'>
           <LoginNavbarIcon />
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className='flex-1 flex flex-col min-w-0 px-8 py-5'>
-  
-          <LoginNavbarAsk
-            onAskQuestion={handleAskQuestion}
-            question={question}
-            answer={answer}
-            loading={loading}
-            error={error}
-            initialFile={selectedFile}
-          />
-
-        
+      <div className='flex-1 flex flex-col min-w-0 px-8'>
+        <LoginNavbarAsk
+          onAskQuestion={handleAskQuestion}
+          question={question}
+          answer={answer}
+          loading={loading}
+          error={error}
+          questionFiles={questionFiles}
+          initialFile={selectedFile}
+          user={user}
+        />
       </div>
 
-      {/* Right Sidebar - Profile */}
       <div className='w-30 shrink-0'>
         <div className='px-4 py-2'>
           <LoginNavbarProfile />

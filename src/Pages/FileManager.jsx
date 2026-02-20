@@ -88,7 +88,7 @@ export default function FileManager() {
       // Container for all tabs
       <div
         className="flex items-end rounded-md"
-        style={{ backgroundColor: '#448AFF1A' }} // <-- container background
+        style={{ backgroundColor: '#transparent' }} // <-- container background
       >
         {openTabs.map(tab => {
           const isActive = tab.id === activeTabId;
@@ -98,7 +98,7 @@ export default function FileManager() {
             <div
               key={tab.id}
               onClick={() => onSelect(tab.id)}
-              className="flex items-center gap-1 px-3 py-1 text-xs cursor-pointer rounded-md"
+              className="flex items-center gap-1 px-3 py-1 text-xs cursor-pointer rounded-md h-7"
               style={{
                 backgroundColor: isActive ? '#448AFF4D' : 'transparent', // only active tab highlighted
                 border: isActive ? '1px solid #E5E7EB' : 'none',
@@ -222,7 +222,11 @@ export default function FileManager() {
             <div
               className="px-2 py-1"
               style={{
-                backgroundColor: '#F1EDED',
+                backgroundColor: '#ffffff',
+                borderTop: '1px solid black',
+                borderLeft: '1px solid black',
+                borderBottom: '1px solid black',
+                borderRight: 'none',
                 borderTopLeftRadius: '0.5rem',
                 borderBottomLeftRadius: '0.5rem',
                 height: '100%',
@@ -241,14 +245,26 @@ export default function FileManager() {
 
           {/* Divider */}
           {!isPreviewMode && (
-            <div className="w-1 bg-gray-300 cursor-col-resize" onMouseDown={startResizing} />
+            <div 
+            className="w-1 bg-gray-300 cursor-col-resize" 
+            onMouseDown={startResizing} 
+              style={{
+                borderTop: '1px solid black',
+                borderBottom: '1px solid black',
+                
+               }}
+            />
           )}
 
           {/* Right section - full width, profile floats on top */}
           <div
             className="flex-1 flex flex-col overflow-hidden"
             style={{
-              backgroundColor: '#F7F2F2',
+              backgroundColor: '#ffffff',
+              borderTop: '1px solid black',
+                borderLeft: 'none',
+                borderBottom: '1px solid black',
+                borderRight: '1px solid black',
               borderTopRightRadius: '0.5rem',
               borderBottomRightRadius: '0.5rem',
               ...(isPreviewMode ? { padding: '0.5rem' } : { padding: '0.5rem' })

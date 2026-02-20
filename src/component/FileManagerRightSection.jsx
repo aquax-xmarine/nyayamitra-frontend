@@ -52,7 +52,7 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
           style={{
             backgroundColor: index % 2 === 0 ? '#448AFF0D' : '#FFFFFF'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C7D2FE'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#448AFF4D'}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#448AFF0D' : '#FFFFFF'}
         >
           <button
@@ -103,7 +103,7 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
 
 
 
-              <button
+              {/* <button
                 className="context-btn flex items-center gap-5 w-full text-left"
                 onClick={() => { console.log('Ask Nyayamitra', contextMenu.file); closeMenu(); }}
               >
@@ -119,7 +119,7 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
               >
                 <img src={trash} alt="file" className="w-4 h-4 object-contain" />
                 <span>Move to Trash</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </>

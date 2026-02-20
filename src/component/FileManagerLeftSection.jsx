@@ -51,7 +51,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
         try {
             await fileAPI.uploadFiles(formData);
             console.log('Upload successful');
-            
+
 
             // Trigger refresh
             if (onFilesUploaded) {
@@ -177,7 +177,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
 
     useEffect(() => {
         if (selectedContainerId) {
-        
+
 
             // Check which section and open it
             const checkSection = (nodes) => {
@@ -190,16 +190,16 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
 
             if (checkSection(trees.library)) {
                 setLibraryOpen(true);
-                expandToNode('library', selectedContainerId);  
+                expandToNode('library', selectedContainerId);
             } else if (checkSection(trees.workingCases)) {
                 setWorkingCasesOpen(true);
-                expandToNode('workingCases', selectedContainerId);  
+                expandToNode('workingCases', selectedContainerId);
             }
         }
     }, [selectedContainerId]);
 
 
-    
+
     const expandNodePath = (nodes, targetId, path = []) => {
         for (const node of nodes) {
             if (node.id === targetId) {
@@ -262,7 +262,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                     onContextMenu={(e) => {
                         e.preventDefault();
 
-                        
+
 
                         // open context menu
                         handleRightClick(e, { ...node, sectionKey });
@@ -365,7 +365,8 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
             className=" px-3 pr-1 pt-1 -ml-2 relative h-full flex flex-col"
             style={{
                 width: width, // now comes from props
-                backgroundColor: '#F1EDED',
+                backgroundColor: '#ffffff', 
+                 
                 borderTopLeftRadius: '0.5rem',
                 borderBottomLeftRadius: '0.5rem',
             }}
@@ -382,7 +383,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
 
             {/*  FIXED HEADER - Image and Search */}
             <div className="flex flex-col gap-2 mt-3">
-                
+
                 <button
                     className="w-full max-w-[98%] inline-flex items-center justify-between"
                     style={{ height: '26px', fontSize: '12px', backgroundColor: '#D9D9D9', color: '#4C4B4B', borderRadius: '7px', borderColor: '#4C4B4B' }}
@@ -403,7 +404,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 <button
                     onClick={() => {
                         setActiveSection('library');
-                        
+
                         setLibraryOpen(prev => !prev);
                     }}
                     onContextMenu={(e) => handleRightClick(e, 'library')}
@@ -446,7 +447,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 <button
                     onClick={() => {
                         setActiveSection('workingCases');
-                      
+
                         setWorkingCasesOpen(prev => !prev);
                     }}
                     onContextMenu={(e) => handleRightClick(e, 'workingCases')}
@@ -615,7 +616,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                                             });
 
                                             const newNode = {
-                                                id: saved.id,     // ✅ REAL UUID
+                                                id: saved.id,     //  REAL UUID
                                                 name: saved.name,
                                                 editing: true,
                                                 open: false,
@@ -677,7 +678,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                                         </button>
 
 
-                                        <button className="context-btn block w-full text-left py-1">
+                                        {/* <button className="context-btn block w-full text-left py-1">
                                             Move To
                                         </button>
                                         <button className="context-btn block w-full text-left py-1">
@@ -685,7 +686,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                                         </button>
                                         <button className="context-btn block w-full text-left py-1">
                                             Delete Subcollection
-                                        </button>
+                                        </button> */}
                                     </>
                                 )}
 
