@@ -17,7 +17,7 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
     navigate('/dashboard', { state: { file } }); // pass file in state
   };
 
-
+  
   useEffect(() => {
     if (!selectedContainerId) return;
 

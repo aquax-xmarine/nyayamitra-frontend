@@ -10,23 +10,29 @@ import folder from '../assets/folder.png';
 
 export default function FileManager() {
 
-
+  //stores all open tabs (both folders and files)
   const [openTabs, setOpenTabs] = useState([]);
 
+  //stores which tab is currently selected
   const [activeTabId, setActiveTabId] = useState(null);
 
+  //stores which folder is currently selected in the left section (for loading files)
   const [selectedContainerId, setSelectedContainerId] = useState(null);
+
+  //hides the left section and makes right section full width when a file is opened in preview mode
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const containerRef = useRef(null);
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+
+
+
   // width of left section (px)
   const [leftWidth, setLeftWidth] = useState(300); // default 30%
 
   const isResizing = useRef(false);
-
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const startResizing = (e) => {
     isResizing.current = true;
@@ -49,7 +55,10 @@ export default function FileManager() {
     }
   };
 
+
+
   const activeTab = openTabs.find(t => t.id === activeTabId);
+
 
   function handleOpenFolder(folder) {
     setSelectedContainerId(folder.id);
@@ -70,6 +79,7 @@ export default function FileManager() {
     setActiveTabId(folder.id);
     setIsPreviewMode(false);
   }
+
 
   function handleOpenFile(file) {
     setOpenTabs(prev => {
@@ -159,6 +169,21 @@ export default function FileManager() {
 
   }
 
+  function closeTab(id) {
+    setOpenTabs(prev => {
+      const updated = prev.filter(f => f.id !== id);
+
+      if (updated.length === 0) {
+        setIsPreviewMode(false); // EXIT preview mode
+        setActiveTabId(null);
+      } else if (activeTabId === id) {
+        setActiveTabId(updated[0].id);
+      }
+
+      return updated;
+    });
+  }
+
   function FilePreview({ file }) {
     if (!file) {
       return null;
@@ -176,20 +201,7 @@ export default function FileManager() {
     );
   }
 
-  function closeTab(id) {
-    setOpenTabs(prev => {
-      const updated = prev.filter(f => f.id !== id);
-
-      if (updated.length === 0) {
-        setIsPreviewMode(false); // EXIT preview mode
-        setActiveTabId(null);
-      } else if (activeTabId === id) {
-        setActiveTabId(updated[0].id);
-      }
-
-      return updated;
-    });
-  }
+  
 
 
 
@@ -234,25 +246,32 @@ export default function FileManager() {
             >
               <FileManagerLeftSection
                 onSelectContainer={(folder) => {
+                  if (!folder) {
+                    setSelectedContainerId(null);
+                    return;
+                  }
+
                   setSelectedContainerId(folder.id);
                   handleOpenFolder(folder);
                 }}
-                selectedContainerId={selectedContainerId}
-                onFilesUploaded={() => setRefreshTrigger(prev => prev + 1)}
+                
+              selectedContainerId={selectedContainerId}
+              onFilesUploaded={() => setRefreshTrigger(prev => prev + 1)}
               />
             </div>
           </div>
 
           {/* Divider */}
           {!isPreviewMode && (
-            <div 
-            className="w-1 bg-gray-300 cursor-col-resize" 
-            onMouseDown={startResizing} 
+            <div
+              className="w-1 bg-gray-300 cursor-col-resize"
+              onMouseDown={startResizing}
               style={{
                 borderTop: '1px solid black',
                 borderBottom: '1px solid black',
                 
-               }}
+
+              }}
             />
           )}
 
@@ -260,15 +279,24 @@ export default function FileManager() {
           <div
             className="flex-1 flex flex-col overflow-hidden"
             style={{
-              backgroundColor: '#ffffff',
-              borderTop: '1px solid black',
-                borderLeft: 'none',
-                borderBottom: '1px solid black',
-                borderRight: '1px solid black',
-              borderTopRightRadius: '0.5rem',
-              borderBottomRightRadius: '0.5rem',
-              ...(isPreviewMode ? { padding: '0.5rem' } : { padding: '0.5rem' })
-            }}
+  backgroundColor: '#ffffff',
+
+  borderTop: '1px solid black',
+  borderBottom: '1px solid black',
+  borderRight: '1px solid black',
+
+  borderLeft: isPreviewMode ? '1px solid black' : 'none',
+
+  borderTopRightRadius: '0.5rem',
+  borderBottomRightRadius: '0.5rem',
+
+  ...(isPreviewMode && {
+    borderTopLeftRadius: '0.5rem',
+    borderBottomLeftRadius: '0.5rem',
+  }),
+
+  padding: '0.5rem'
+}}
           >
             <FileTabs
               openTabs={openTabs}

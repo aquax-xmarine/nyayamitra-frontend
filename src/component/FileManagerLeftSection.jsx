@@ -39,26 +39,29 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
         const files = Array.from(e.target.files);
         if (!files.length) return;
 
-        if (!selectedContainerId) {
-            console.warn('No container selected');
+        // fallback to activeSection if uploadSection is undefined
+        const sectionKey = fileInputRef.current?.uploadSection || activeSection;
+
+        if (!selectedContainerId && !sectionKey) {
+            console.warn('No container or section selected');
             return;
         }
 
         const formData = new FormData();
         files.forEach(file => formData.append('files', file));
-        formData.append('containerId', selectedContainerId);
+
+        if (selectedContainerId) {
+            formData.append('containerId', selectedContainerId);
+        } else if (sectionKey) {
+            formData.append('section', sectionKey); // send section for root
+        }
 
         try {
-            await fileAPI.uploadFiles(formData);
-            console.log('Upload successful');
-
-
-            // Trigger refresh
-            if (onFilesUploaded) {
-                onFilesUploaded();
-            }
+            const response = await fileAPI.uploadFiles(formData);
+            console.log('Upload successful', response);
+            if (onFilesUploaded) onFilesUploaded();
         } catch (err) {
-            console.error('Upload failed:', err);
+            console.error('Upload failed:', err.response?.data || err.message);
         }
     };
 
@@ -130,6 +133,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
         contextMenu.section === 'workingCases';
 
 
+    //converts flat structure returned by backend into tree structure for frontend
     function buildTree(rows) {
         const map = {};
         const roots = [];
@@ -256,6 +260,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
+                        toggle(sectionKey, node.id);
                         onSelectContainer(node);
                         setActiveSection(null);
                     }}
@@ -275,11 +280,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                     <img
                         src={right_arrow}
                         className={`w-2 h-4 transition-transform ${node.open ? 'rotate-90' : ''}`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            toggle(sectionKey, node.id);
-                            onSelectContainer(node);
-                        }}
+
                     />
                     <img src={folder_img} alt="" className="w-3 h-3" />
                     {node.editing ? (
@@ -365,8 +366,8 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
             className=" px-3 pr-1 pt-1 -ml-2 relative h-full flex flex-col"
             style={{
                 width: width, // now comes from props
-                backgroundColor: '#ffffff', 
-                 
+                backgroundColor: '#ffffff',
+
                 borderTopLeftRadius: '0.5rem',
                 borderBottomLeftRadius: '0.5rem',
             }}
@@ -378,7 +379,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
 
                 ref={fileInputRef}
                 style={{ display: 'none' }}
-                onChange={handleFileUpload}
+                onChange={(e) => handleFileUpload(e, fileInputRef.current.uploadSection)}
             />
 
             {/*  FIXED HEADER - Image and Search */}
@@ -404,7 +405,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 <button
                     onClick={() => {
                         setActiveSection('library');
-
+                        onSelectContainer(null);
                         setLibraryOpen(prev => !prev);
                     }}
                     onContextMenu={(e) => handleRightClick(e, 'library')}
@@ -447,7 +448,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                 <button
                     onClick={() => {
                         setActiveSection('workingCases');
-
+                        onSelectContainer(null);
                         setWorkingCasesOpen(prev => !prev);
                     }}
                     onContextMenu={(e) => handleRightClick(e, 'workingCases')}
@@ -578,6 +579,12 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                                 <button
                                     className="context-btn block w-full text-left py-1"
                                     onClick={() => {
+                                        if (typeof contextMenu.section === 'string') {
+                                            // Root section
+                                            fileInputRef.current.uploadSection = contextMenu.section;
+                                        } else {
+                                            fileInputRef.current.uploadSection = null;
+                                        }
                                         fileInputRef.current?.click();
                                         setContextMenu({ ...contextMenu, visible: false });
                                     }}
