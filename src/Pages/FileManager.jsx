@@ -171,15 +171,25 @@ export default function FileManager() {
 
   function closeTab(id) {
     setOpenTabs(prev => {
-      const updated = prev.filter(f => f.id !== id);
+      const index = prev.findIndex(t => t.id === id);
+      if (index === -1) return prev; // tab not found
 
-      if (updated.length === 0) {
-        setIsPreviewMode(false); // EXIT preview mode
-        setActiveTabId(null);
-      } else if (activeTabId === id) {
-        setActiveTabId(updated[0].id);
+      const updated = prev.filter(t => t.id !== id);
+
+      // Determine new active tab
+      if (activeTabId === id) {
+        if (updated.length === 0) {
+          setActiveTabId(null);
+          setIsPreviewMode(false); // exit preview mode
+        } else {
+          // Activate previous tab if exists, otherwise next tab
+          const newIndex = index > 0 ? index - 1 : 0;
+          setActiveTabId(updated[newIndex].id);
+          setIsPreviewMode(updated[newIndex].type === 'file');
+        }
       }
 
+      // If closed tab wasn't active, do nothing with activeTabId
       return updated;
     });
   }
@@ -201,7 +211,7 @@ export default function FileManager() {
     );
   }
 
-  
+
 
 
 
@@ -254,9 +264,9 @@ export default function FileManager() {
                   setSelectedContainerId(folder.id);
                   handleOpenFolder(folder);
                 }}
-                
-              selectedContainerId={selectedContainerId}
-              onFilesUploaded={() => setRefreshTrigger(prev => prev + 1)}
+
+                selectedContainerId={selectedContainerId}
+                onFilesUploaded={() => setRefreshTrigger(prev => prev + 1)}
               />
             </div>
           </div>
@@ -269,7 +279,7 @@ export default function FileManager() {
               style={{
                 borderTop: '1px solid black',
                 borderBottom: '1px solid black',
-                
+
 
               }}
             />
@@ -279,24 +289,24 @@ export default function FileManager() {
           <div
             className="flex-1 flex flex-col overflow-hidden"
             style={{
-  backgroundColor: '#ffffff',
+              backgroundColor: '#ffffff',
 
-  borderTop: '1px solid black',
-  borderBottom: '1px solid black',
-  borderRight: '1px solid black',
+              borderTop: '1px solid black',
+              borderBottom: '1px solid black',
+              borderRight: '1px solid black',
 
-  borderLeft: isPreviewMode ? '1px solid black' : 'none',
+              borderLeft: isPreviewMode ? '1px solid black' : 'none',
 
-  borderTopRightRadius: '0.5rem',
-  borderBottomRightRadius: '0.5rem',
+              borderTopRightRadius: '0.5rem',
+              borderBottomRightRadius: '0.5rem',
 
-  ...(isPreviewMode && {
-    borderTopLeftRadius: '0.5rem',
-    borderBottomLeftRadius: '0.5rem',
-  }),
+              ...(isPreviewMode && {
+                borderTopLeftRadius: '0.5rem',
+                borderBottomLeftRadius: '0.5rem',
+              }),
 
-  padding: '0.5rem'
-}}
+              padding: '0.5rem'
+            }}
           >
             <FileTabs
               openTabs={openTabs}
@@ -321,6 +331,7 @@ export default function FileManager() {
                 selectedContainerId={selectedContainerId}
                 refreshTrigger={refreshTrigger}
                 onOpenFile={handleOpenFile}
+                onFileDeleted={closeTab}
               />
             )}
           </div>

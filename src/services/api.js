@@ -167,6 +167,9 @@ export const lawyerAPI = {
 // End of Lawyer specific APIs
 
 
+
+
+
 //container API
 export const containerAPI = {
   getContainers: async (section) => {
@@ -180,11 +183,45 @@ export const containerAPI = {
   },
 
   updateContainerName: async (id, name) => {
-  const response = await api.patch(`/containers/${id}`, { name });
-  return response.data;
-}
+    const response = await api.patch(`/containers/${id}`, { name });
+    return response.data;
+  },
+
+  updateContainerSection: async (id, section) => {
+    const response = await api.patch(`/containers/${id}/section`, { section });
+    return response.data;
+  },
+
+  updateContainerParent: async (id, parentId) => {
+    const response = await api.patch(`/containers/${id}/parent`, { parent_id: parentId });
+    return response.data;
+  },
+
+  saveOriginalLocation: async (id) => {
+    const response = await api.post(`/containers/${id}/save-original-location`);
+    return response.data;
+  },
+
+  getOriginalSection: async (id) => {
+    const response = await api.get(`/containers/${id}/original-section`);
+    return response.data.section;
+  },
+
+  getOriginalParent: async (id) => {
+    const response = await api.get(`/containers/${id}/original-parent`);
+    return response.data.parent_id;
+  },
+
+
+
+
 
 };
+
+
+
+
+
 
 
 
@@ -206,18 +243,52 @@ export const fileAPI = {
     return response.data;
   },
 
-  // Rename a file (optional, future-safe)
-  renameFile: async (id, name) => {
-    const response = await api.patch(`/files/${id}`, { name });
+  // Rename a file
+  updateFileName: async (id, name) => {
+    const response = await api.patch(`/files/${id}/rename`, { name });
     return response.data;
   },
 
-  // Delete a file
+  // Copy a file to another container (e.g., Bookmark)
+  copyFileToContainer: async (fileId, containerId) => {
+    const response = await api.post(`/files/${fileId}/copy`, { containerId });
+    return response.data;
+  },
+
+  toggleBookmark: async (fileId, bookmarked) => {
+    const response = await api.put(`/files/${fileId}/bookmark`, { bookmarked });
+    return response.data;
+  },
+
+  // Delete a file (permanent delete, not move to trash)
   deleteFile: async (id) => {
     const response = await api.delete(`/files/${id}`);
     return response.data;
   },
+
+  updateFileContainer: async (fileId, containerId) => {
+    const response = await api.patch(`/files/${fileId}/container`, { container_id: containerId });
+    return response.data;
+  },
+
+  saveOriginalLocationFiles: async (fileId) => {
+    const response = await api.post(`/files/${fileId}/save-original-location`);
+    return response.data;
+  },
+
+  getFileOriginalParent: async (fileId) => {
+    const response = await api.get(`/files/${fileId}/original-parent-files`);
+    return response.data.parent_id;
+  },
+
+  recordRecentFile: async (fileId) => {
+    const response = await api.post(`/files/${fileId}/record-recent`);
+    return response.data;
+  },
 };
+
+
+
 
 
 

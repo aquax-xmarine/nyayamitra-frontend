@@ -4,6 +4,7 @@ import SendIcon from '../assets/send.png';
 import addIcon from '../assets/add.png';
 import logo from '../assets/logo.png';
 import API_URL from '../config/api';
+import remarkGfm from 'remark-gfm';
 
 
 const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialFile = null, questionFiles = [], user }) => {
@@ -12,9 +13,13 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const [attachedFiles, setAttachedFiles] = useState(initialFile ? [initialFile] : []);
+  const [documentHashes, setDocumentHashes] = useState([]);
 
   //  Use isLoading (local) not loading (prop)
   const canSend = (!isLoading) && (inputValue.trim() || attachedFiles.length > 0);
+
+
+  const displayedAnswer = answer?.mode === 'summary' ? answer.summary : answer?.answer || answer;
 
   const getProfilePictureUrl = () => {
     if (user?.profile_picture) {
@@ -73,6 +78,8 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
 
       const data = await response.json();
       console.log('Backend response:', data);
+
+      onAskQuestion(inputValue, data, filesToSend);
 
       if (data.answer) {
         onAskQuestion(inputValue, data.answer, filesToSend); // pass attached files
@@ -151,7 +158,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         )}
 
         {/* Answer card */}
-        {answer && !isLoading && (
+        {displayedAnswer && !isLoading && (
           <div className="flex justify-start mb-8">
             <div className="flex gap-3 max-w-[80%]">
 
@@ -172,12 +179,35 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
                   NyayaMitra Response
                 </p>
                 <div className="text-sm text-gray-800 leading-relaxed prose prose-sm max-w-none
-          prose-headings:text-slate-800 prose-headings:font-semibold
-          prose-p:text-gray-700 prose-p:leading-relaxed
-          prose-strong:text-slate-800 prose-strong:font-semibold
-          prose-ul:text-gray-700 prose-li:marker:text-slate-400
-          prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded">
-                  <ReactMarkdown>{answer}</ReactMarkdown>
+  prose-headings:text-slate-800 prose-headings:font-semibold
+  prose-p:text-gray-700 prose-p:leading-relaxed
+  prose-strong:text-slate-800 prose-strong:font-semibold
+  prose-ul:list-disc prose-ul:pl-5 prose-ul:text-gray-700
+  prose-ol:list-decimal prose-ol:pl-5
+  prose-li:marker:text-slate-400
+  prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      ul: ({ node, ...props }) => (
+                        <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', marginBottom: '0.5rem' }} {...props} />
+                      ),
+                      ol: ({ node, ...props }) => (
+                        <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5rem', marginBottom: '0.5rem' }} {...props} />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li style={{ marginBottom: '0.25rem' }} {...props} />
+                      ),
+                      strong: ({ node, ...props }) => (
+                        <strong style={{ fontWeight: '600', color: '#1e293b' }} {...props} />
+                      ),
+                      p: ({ node, ...props }) => (
+                        <p style={{ marginBottom: '0.5rem' }} {...props} />
+                      ),
+                    }}
+                  >
+                    {displayedAnswer}
+                  </ReactMarkdown>
                 </div>
               </div>
 
