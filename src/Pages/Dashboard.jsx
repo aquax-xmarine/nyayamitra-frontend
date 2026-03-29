@@ -16,6 +16,8 @@ const Dashboard = () => {
   const [questionFiles, setQuestionFiles] = useState([]);
   const { user } = useAuth();
 
+  const [view, setView] = useState('chat');
+
   //  Simply receive question + answer from AskQuestion component
   const handleAskQuestion = (userQuestion, groqAnswer, files) => {
     if (groqAnswer) {
