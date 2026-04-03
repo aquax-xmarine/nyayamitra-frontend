@@ -75,35 +75,33 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
     if (!sessionIdToLoad) return;
 
     const loadSession = async () => {
-      console.log('📂 Loading session:', sessionIdToLoad);
-      try {
-        const res = await fetch(`${API_URL}/api/chats/sessions/${sessionIdToLoad}/messages`, {
-          credentials: 'include'
-        });
-        const data = await res.json();
+      const [msgRes, filesRes] = await Promise.all([
+        fetch(`${API_URL}/api/chats/sessions/${sessionIdToLoad}/messages`, { credentials: 'include' }),
+        fetch(`${API_URL}/api/chats/sessions/${sessionIdToLoad}/files`, { credentials: 'include' })
+      ]);
+      const data = await msgRes.json();
+      const filesData = await filesRes.json();
 
-        // Convert DB rows to messages state format
-        const loaded = data.map(row => ({
-          question: row.question,
-          answer: row.answer,
-          files: []
-        }));
+      const loaded = data.map((row, i) => ({
+        question: row.question,
+        answer: row.answer,
+        files: i === 0 && Array.isArray(filesData)
+          ? filesData.map(f => ({ name: f.name, file_path: f.file_path }))
+          : []
+      }));
+      setMessages(loaded);
+      setSessionId(sessionIdToLoad);
+      console.log('✅ Session loaded:', loaded.length, 'messages');
 
-        setMessages(loaded);
-        setSessionId(sessionIdToLoad);
-        console.log('✅ Session loaded:', loaded.length, 'messages');
-
-        const sessionRes = await fetch(`${API_URL}/api/chats/sessions/${sessionIdToLoad}`, {
-          credentials: 'include'
-        });
-        const sessionData = await sessionRes.json();
-        if (sessionData.document_id) {
-          setDocumentId(sessionData.document_id);
-          sessionStorage.setItem('documentId', sessionData.document_id);
-        }
-      } catch (err) {
-        console.error('Failed to load session:', err);
+      const sessionRes = await fetch(`${API_URL}/api/chats/sessions/${sessionIdToLoad}`, {
+        credentials: 'include'
+      });
+      const sessionData = await sessionRes.json();
+      if (sessionData.document_id) {
+        setDocumentId(sessionData.document_id);
+        sessionStorage.setItem('documentId', sessionData.document_id);
       }
+
     };
 
     loadSession();
@@ -113,29 +111,21 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
     if (!sessionId) return;
 
     const loadMessages = async () => {
-      console.log('📂 Loading messages for session:', sessionId);
-      try {
-        const res = await fetch(`${API_URL}/api/chats/sessions/${sessionId}/messages`, {
-          credentials: 'include'
-        });
-        const data = await res.json();
+      const [msgRes, filesRes] = await Promise.all([
+        fetch(`${API_URL}/api/chats/sessions/${sessionId}/messages`, { credentials: 'include' }),
+        fetch(`${API_URL}/api/chats/sessions/${sessionId}/files`, { credentials: 'include' })
+      ]);
+      const data = await msgRes.json();
+      const filesData = await filesRes.json();
 
-        if (!Array.isArray(data) || data.length === 0) {
-          console.log('No messages found for session');
-          return;
-        }
-
-        const loaded = data.map(row => ({
-          question: row.question,
-          answer: row.answer,
-          files: []
-        }));
-
-        setMessages(loaded);
-        console.log('✅ Messages loaded:', loaded.length);
-      } catch (err) {
-        console.error('Failed to load messages:', err);
-      }
+      const loaded = data.map((row, i) => ({
+        question: row.question,
+        answer: row.answer,
+        files: i === 0 && Array.isArray(filesData)
+          ? filesData.map(f => ({ name: f.name, file_path: f.file_path }))
+          : []
+      }));
+      setMessages(loaded);
     };
 
     loadMessages();
@@ -170,11 +160,34 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
     try {
       const activeContainerId = documentId || crypto.randomUUID();
 
-      // Step 1: Upload files to Node DB
+      // Step 1: Create session first if it doesn't exist
+      let currentSessionId = sessionId;
+      if (!currentSessionId) {
+        const sessionRes = await fetch(`${API_URL}/api/chats/sessions`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: currentQuestion.slice(0, 50),
+            document_id: activeContainerId
+          })
+        });
+        const sessionData = await sessionRes.json();
+        currentSessionId = sessionData.id;
+        sessionStorage.setItem('chatSessionId', currentSessionId);
+        setSessionId(currentSessionId);
+
+        const refreshRes = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
+        const refreshData = await refreshRes.json();
+        if (Array.isArray(refreshData)) setSessionList(refreshData);
+      }
+
+      // Step 2: Upload files with session_id
       const newFiles = currentFiles.filter(f => f instanceof File);
       if (newFiles.length > 0) {
         const uploadFormData = new FormData();
         uploadFormData.append('source', 'chat');
+        uploadFormData.append('sessionId', currentSessionId);
         newFiles.forEach(file => uploadFormData.append('files', file));
         const uploadRes = await fetch(`${API_URL}/api/files/upload`, {
           method: 'POST',
@@ -185,7 +198,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         console.log('Upload result:', uploadData.files);
       }
 
-      // Step 2: Send to Python
+      // Step 3: Send to Python
       const formData = new FormData();
       formData.append('question', currentQuestion);
       formData.append('document_id', activeContainerId);
@@ -206,44 +219,13 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
 
       const answerText = data?.mode === 'summary' ? data.summary : data?.answer || 'No answer found.';
 
-      // Step 3: Create session if first message, then save Q&A
-      // Step 3: Create session if first message, then save Q&A
-      let currentSessionId = sessionId;
-      if (!currentSessionId) {
-        console.log('🆕 Creating new chat session...');
-        const sessionRes = await fetch(`${API_URL}/api/chats/sessions`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: currentQuestion.slice(0, 50),
-            document_id: newDocumentId
-          })
-        });
-        const sessionData = await sessionRes.json();
-        console.log('📦 Session creation response:', sessionData); // ADD
-        currentSessionId = sessionData.id;
-        sessionStorage.setItem('chatSessionId', currentSessionId);
-        console.log('🆔 currentSessionId:', currentSessionId);    // ADD
-        setSessionId(currentSessionId);
-        console.log('✅ Session created:', currentSessionId);
-
-        // Refresh session list so history panel shows the new chat
-        const refreshRes = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
-        const refreshData = await refreshRes.json();
-        if (Array.isArray(refreshData)) setSessionList(refreshData);
-      }
-
-      console.log('💾 Saving message, currentSessionId:', currentSessionId); // ADD
-
-      // Save Q&A pair to DB
+      // Step 4: Save Q&A pair to DB
       await fetch(`${API_URL}/api/chats/sessions/${currentSessionId}/messages`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: currentQuestion, answer: answerText })
       });
-      console.log('✅ Message saved to DB');
 
       setMessages(prev => {
         const updated = [...prev];
@@ -354,7 +336,13 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
                     {msg.files.map((file, i) => (
                       <a
                         key={i}
-                        href={file.file_path ? `https://localhost:5000/uploads/${file.file_path}` : URL.createObjectURL(file)}
+                        href={
+                          file.file_path
+                            ? `${API_URL}/uploads/${file.file_path}`
+                            : file instanceof File
+                              ? URL.createObjectURL(file)
+                              : '#'
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 bg-slate-100 border border-slate-300 text-slate-700 px-3 py-2 rounded-[7px] text-xs font-medium hover:bg-slate-200 transition-colors shadow-sm"
