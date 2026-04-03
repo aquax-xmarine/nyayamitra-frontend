@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const navigate = useNavigate();
   return (
-    <div className="flex h-screen bg-blue-600 overflow-hidden">
+    <div className="flex h-screen bg-blue-600 overflow-hidden relative">
 
       <div
         className="absolute inset-0 bg-center bg-cover"
@@ -19,39 +19,32 @@ const Login = () => {
       {/* Background opacity overlay */}
       <div className="absolute inset-0 bg-white opacity-30"></div>
 
+      {/* Back to Website - absolutely positioned top right */}
+      <button
+        className="absolute top-10 right-15 flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity z-30"
+        onClick={() => navigate("/")}
+        style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#6B6666' }}
+      >
+        <img src={back_button} alt="Back" className="w-4 h-4" />
+        Back to Website
+      </button>
 
       {/* Left Container */}
-      <div className="sm:w-1/12 md:w-1/3 lg:w-1/2  xl:w-4/7 flex flex-col relative">
+      <div className="sm:w-1/12 md:w-1/3 lg:w-1/2 xl:w-4/7 flex flex-col relative">
 
         {/* Navbar */}
-        <nav className="flex items-center justify-between pt-10 w-[700px]">
-          {/* Logo + Title */}
+        <nav className="flex items-center pt-10 px-8 w-full">
           <button className="flex items-center gap-3 cursor-pointer hover:opacity-70 transition-opacity"
             onClick={() => navigate("/")}
-            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#A39E9E' }}
+            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#6B6666' }}
           >
-            <img src={logo} alt="Logo" className="w-8 h-7 rounded-[7px] ml-8" />
-            <p className=" text-[17px] font-medium"
-            >NYAYAMITRA</p>
+            <img src={logo} alt="Logo" className="w-8 h-7 rounded-[7px] ml-8 border border-[#6B6666]" />
+            <p className="text-[17px] font-medium">NYAYAMITRA</p>
           </button>
-
-          {/* Back to Website */}
-
-          <button className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity z-30"
-            onClick={() => navigate("/")}
-            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '11px', color: '#A39E9E' }}
-            
-          >
-            <img src={back_button} alt="Back" className="w-4 h-4" />
-            Back to Website
-          </button>
-
-
         </nav>
 
-
         {/* Text Content */}
-        <div className="pl-10 pb-0 absolute left-25 bottom-19 flex-1 flex flex-col sm:hidden md:block">
+        <div className="pl-10 pb-0 absolute left-40 bottom-19 flex-1 flex flex-col sm:hidden md:block">
           <h1 className="text-4xl font-bold text-white mb-4"
             style={{ color: '#A39E9E' }}
           >
@@ -66,13 +59,9 @@ const Login = () => {
         </div>
       </div>
 
-
       {/* Right Container */}
-
       <div className="sm:w-11/12 md:w-2/3 lg:w-1/2 xl:w-3/7 relative h-screen flex items-center justify-center">
-
         <LoginCard />
-
       </div>
     </div>
   );

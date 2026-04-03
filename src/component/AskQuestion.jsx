@@ -5,9 +5,9 @@ import addIcon from '../assets/add.png';
 import logo from '../assets/logo.png';
 import API_URL from '../config/api';
 import remarkGfm from 'remark-gfm';
+import cross_img from '../assets/cross_img.png';
 
-
-const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialFile = null, questionFiles = [], user, sessionIdToLoad = null }) => {
+const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialFile = null, questionFiles = [], user, sessionIdToLoad = null, onNewChatReady, showHistory, onCloseHistory, }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState([]); // list of {question, answer, files}
@@ -16,13 +16,20 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
   const [attachedFiles, setAttachedFiles] = useState(initialFile ? [initialFile] : []);
   const [documentHashes, setDocumentHashes] = useState([]);
   const bottomRef = useRef(null);
-  const [documentId, setDocumentId] = useState(null);
+  // 1. Change initial state to read from sessionStorage
+  const [documentId, setDocumentId] = useState(
+    () => sessionStorage.getItem('documentId') || null
+  );
+
+
 
   //  Use isLoading (local) not loading (prop)
   const canSend = (!isLoading) && (inputValue.trim() || attachedFiles.length > 0);
 
+  const [sessionList, setSessionList] = useState([]);
+
   const [sessionId, setSessionId] = useState(
-    () => localStorage.getItem('chatSessionId') || null
+    () => sessionStorage.getItem('chatSessionId') || null
   );
 
 
@@ -34,6 +41,22 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
     }
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=000000&color=ffffff&size=80&bold=true`;
   };
+
+  const handleNewChat = () => {
+    console.log('handleNewChat called!');
+    setDocumentId(null);
+    setSessionId(null);
+    setMessages([]);
+    setInputValue('');
+    setAttachedFiles([]);
+    sessionStorage.removeItem('documentId');
+    sessionStorage.removeItem('chatSessionId');
+  };
+
+  useEffect(() => {
+    console.log('Registering handleNewChat:', handleNewChat);
+    if (onNewChatReady) onNewChatReady(handleNewChat);
+  }, []);
 
   // Auto scroll to bottom on new message
   useEffect(() => {
@@ -69,6 +92,15 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         setMessages(loaded);
         setSessionId(sessionIdToLoad);
         console.log('✅ Session loaded:', loaded.length, 'messages');
+
+        const sessionRes = await fetch(`${API_URL}/api/chats/sessions/${sessionIdToLoad}`, {
+          credentials: 'include'
+        });
+        const sessionData = await sessionRes.json();
+        if (sessionData.document_id) {
+          setDocumentId(sessionData.document_id);
+          sessionStorage.setItem('documentId', sessionData.document_id);
+        }
       } catch (err) {
         console.error('Failed to load session:', err);
       }
@@ -78,36 +110,50 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
   }, [sessionIdToLoad]);
 
   useEffect(() => {
-  if (!sessionId) return;
+    if (!sessionId) return;
 
-  const loadMessages = async () => {
-    console.log('📂 Loading messages for session:', sessionId);
-    try {
-      const res = await fetch(`${API_URL}/api/chats/sessions/${sessionId}/messages`, {
-        credentials: 'include'
-      });
-      const data = await res.json();
+    const loadMessages = async () => {
+      console.log('📂 Loading messages for session:', sessionId);
+      try {
+        const res = await fetch(`${API_URL}/api/chats/sessions/${sessionId}/messages`, {
+          credentials: 'include'
+        });
+        const data = await res.json();
 
-      if (!Array.isArray(data) || data.length === 0) {
-        console.log('No messages found for session');
-        return;
+        if (!Array.isArray(data) || data.length === 0) {
+          console.log('No messages found for session');
+          return;
+        }
+
+        const loaded = data.map(row => ({
+          question: row.question,
+          answer: row.answer,
+          files: []
+        }));
+
+        setMessages(loaded);
+        console.log('✅ Messages loaded:', loaded.length);
+      } catch (err) {
+        console.error('Failed to load messages:', err);
       }
+    };
 
-      const loaded = data.map(row => ({
-        question: row.question,
-        answer: row.answer,
-        files: []
-      }));
+    loadMessages();
+  }, []); // empty array — only runs once on mount
 
-      setMessages(loaded);
-      console.log('✅ Messages loaded:', loaded.length);
-    } catch (err) {
-      console.error('Failed to load messages:', err);
-    }
-  };
 
-  loadMessages();
-}, []); // empty array — only runs once on mount
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
+        const data = await res.json();
+        if (Array.isArray(data)) setSessionList(data);
+      } catch (err) {
+        console.error('Failed to fetch sessions:', err);
+      }
+    };
+    fetchSessions();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -156,6 +202,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
 
       const newDocumentId = data.document_id || activeContainerId;
       setDocumentId(newDocumentId);
+      sessionStorage.setItem('documentId', newDocumentId);
 
       const answerText = data?.mode === 'summary' ? data.summary : data?.answer || 'No answer found.';
 
@@ -176,10 +223,15 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         const sessionData = await sessionRes.json();
         console.log('📦 Session creation response:', sessionData); // ADD
         currentSessionId = sessionData.id;
-        localStorage.setItem('chatSessionId', currentSessionId);
+        sessionStorage.setItem('chatSessionId', currentSessionId);
         console.log('🆔 currentSessionId:', currentSessionId);    // ADD
         setSessionId(currentSessionId);
         console.log('✅ Session created:', currentSessionId);
+
+        // Refresh session list so history panel shows the new chat
+        const refreshRes = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
+        const refreshData = await refreshRes.json();
+        if (Array.isArray(refreshData)) setSessionList(refreshData);
       }
 
       console.log('💾 Saving message, currentSessionId:', currentSessionId); // ADD
@@ -212,13 +264,85 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative">
+
+      {showHistory && (
+        <div className="fixed left-16 top-0 h-full w-72 bg-white border-r border-gray-100 z-50 flex flex-col">
+
+          {/* Header */}
+          <div className="px-5 pt-6 pb-4" style={{ position: 'relative' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">CHAT HISTORY</p>
+            <button
+              onClick={onCloseHistory}
+              style={{
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
+                position: 'absolute',
+                top: '15px',
+                right: '0px',
+                cursor: 'pointer'
+              }}
+            >
+              <img src={cross_img} alt="close" className="w-4 h-4 object-contain" />
+            </button>
+            <div className="h-px bg-gray-100 mt-3" />
+          </div>
+
+          {/* Session list */}
+          <div className="flex-1 overflow-y-auto px-0 pb-6 flex flex-col gap-0 custom-scrollbar">
+            {sessionList.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-2">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+                <p className="text-xs text-gray-400">No chats yet</p>
+              </div>
+            ) : (
+              sessionList.map((session, index) => (
+                <button
+                  key={session.id}
+                  onClick={async () => {
+                    if (session.document_id) {
+                      setDocumentId(session.document_id);
+                      sessionStorage.setItem('documentId', session.document_id);
+                    }
+                    setSessionId(session.id);
+                    sessionStorage.setItem('chatSessionId', session.id);
+                    const res = await fetch(`${API_URL}/api/chats/sessions/${session.id}/messages`, { credentials: 'include' });
+                    const data = await res.json();
+                    const filesRes = await fetch(`${API_URL}/api/chats/sessions/${session.id}/files`, { credentials: 'include' });
+                    const filesData = await filesRes.json();
+                    if (Array.isArray(data)) {
+                      setMessages(data.map((row, i) => ({
+                        question: row.question,
+                        answer: row.answer,
+                        files: i === 0 ? (Array.isArray(filesData) ? filesData.map(f => ({ name: f.name, file_path: f.file_path })) : []) : []
+                      })));
+                    }
+                    onCloseHistory();
+                  }}
+                  className={`w-full text-left px-0 py-3 rounded-lg transition-all group hover:bg-gray-50 ${sessionId === session.id ? 'bg-gray-50' : ''}`}
+                  style={{ border: 'none', outline: 'none', background: sessionId === session.id ? '#f9fafb' : 'transparent', borderRadius: '15px' }}
+                >
+
+                  <p className="text-sm text-gray-700 truncate font-normal leading-snug group-hover:text-black transition-colors">
+                    {session.title || 'Untitled Chat'}
+                  </p>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+
 
       <div>
         <h1 className="text-xl font-regular text-gray-800 py-5 leading-none">NYAYAMITRA</h1>
       </div>
 
-      <div className="flex-1 overflow-auto pl-70 pr-50 -mt-10">
+      <div className="flex-1 overflow-auto pl-70 pr-50 -mt-10 custom-scrollbar">
 
         {messages.map((msg, index) => (
           <div key={index}>
@@ -247,7 +371,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
                 <div className="flex gap-3 items-start">
                   <div className="bg-slate-200 border border-slate-300 rounded-2xl rounded-tr-sm px-5 py-4 shadow-sm">
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">You</p>
-                    <p className="text-sm text-slate-700 leading-relaxed font-medium">{msg.question}</p>
+                    <p className="text-sm text-slate-700 leading-relaxed font-normal">{msg.question}</p>
                   </div>
                   <img src={getProfilePictureUrl()} alt="User" className="w-8 h-8 shrink-0 rounded-[7px] object-cover" />
                 </div>

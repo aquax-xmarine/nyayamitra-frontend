@@ -10,6 +10,9 @@ export default function LoginNavbarProfile() {
     const { user, logout } = useAuth();
 
     const handleLogout = async () => {
+        sessionStorage.removeItem('documentId');
+        sessionStorage.removeItem('chatSessionId');
+
         await logout();
         navigate("/");
         setIsOverlayOpen(false);
@@ -23,6 +26,8 @@ export default function LoginNavbarProfile() {
         // Default avatar with user's initials (smaller size for navbar)
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=000000&color=ffffff&size=80&bold=true`;
     };
+
+
 
     return (
         <div className="flex items-center justify-start p-2 w-40">

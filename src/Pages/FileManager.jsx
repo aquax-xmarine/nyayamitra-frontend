@@ -7,6 +7,8 @@ import FileManagerRightSection from '../component/FileManagerRightSection.jsx';
 import cross_img from '../assets/cross_img.png';
 import files_img from '../assets/files_img.png';
 import folder from '../assets/folder.png';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function FileManager() {
 
@@ -26,6 +28,7 @@ export default function FileManager() {
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  const navigate = useNavigate();
 
 
 
@@ -42,6 +45,7 @@ export default function FileManager() {
   const stopResizing = () => {
     isResizing.current = false;
   };
+  
 
   const resize = (e) => {
     if (isResizing.current && containerRef.current) {
@@ -199,7 +203,7 @@ export default function FileManager() {
       return null;
     }
 
-
+   
     return (
       <div className="flex-1 w-full">
         <iframe
@@ -221,7 +225,7 @@ export default function FileManager() {
       {/* Left Sidebar */}
       <div className="w-16 border-r shrink-0 overflow-y-auto">
         <div className="py-3 px-2">
-          <LoginNavbarIcon />
+          <LoginNavbarIcon onToggleHistory={() => navigate('/dashboard', { state: { showHistory: true } })}/>
         </div>
       </div>
 

@@ -73,8 +73,8 @@ export default function LoginCard() {
   };
 
   return (
-    <div className="flex items-center justify-center p-8">
-      <div className="w-[450px] bg-white rounded-3xl shadow-lg px-20 py-12 pt-1 pb-1">
+    <div className="flex items-center justify-center">
+      <div className="w-[450px] bg-white rounded-3xl shadow-lg px-20 py-3">
 
         {/* Header */}
         <div className="mb-8 pt-12">

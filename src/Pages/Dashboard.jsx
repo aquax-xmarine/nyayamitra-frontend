@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import LoginNavbarAsk from '../component/AskQuestion.jsx';
 import LoginNavbarIcon from '../component/NavBarProfileIcon';
 import LoginNavbarProfile from '../component/NavBarProfileProfile';
 import { useAuth } from '../context/AuthContext';
+
 
 const Dashboard = () => {
   const location = useLocation();
@@ -15,20 +16,26 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [questionFiles, setQuestionFiles] = useState([]);
   const { user } = useAuth();
+  const newChatRef = useRef(null)
+  const navigate = useNavigate();
 
   const [view, setView] = useState('chat');
+  const [showHistory, setShowHistory] = useState(
+    () => location.state?.showHistory === true
+  );
+
 
   //  Simply receive question + answer from AskQuestion component
   const handleAskQuestion = (userQuestion, groqAnswer, files) => {
     if (groqAnswer) {
-    //  Second call - answer is ready
-    setAnswer(groqAnswer);
-  } else {
-    //  First call - show question + files immediately
-    setQuestion(userQuestion);
-    setQuestionFiles(files || []);
-    setAnswer(''); // clear previous answer
-  }
+      //  Second call - answer is ready
+      setAnswer(groqAnswer);
+    } else {
+      //  First call - show question + files immediately
+      setQuestion(userQuestion);
+      setQuestionFiles(files || []);
+      setAnswer(''); // clear previous answer
+    }
 
   };
 
@@ -36,11 +43,14 @@ const Dashboard = () => {
     <div className='flex h-screen overflow-hidden'>
       <div className='w-16 border-r shrink-0 overflow-y-auto'>
         <div className='py-3 px-2'>
-          <LoginNavbarIcon />
+          <LoginNavbarIcon
+            onNewChat={() => newChatRef.current?.()}
+            onToggleHistory={() =>setShowHistory(prev => !prev)}
+          />
         </div>
       </div>
 
-      <div className='flex-1 flex flex-col min-w-0 px-8'>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${showHistory ? 'pl-20 pr-0' : 'px-10'}`}>
         <LoginNavbarAsk
           onAskQuestion={handleAskQuestion}
           question={question}
@@ -50,6 +60,9 @@ const Dashboard = () => {
           questionFiles={questionFiles}
           initialFile={selectedFile}
           user={user}
+          onNewChatReady={(fn) => { newChatRef.current = fn; }}
+          showHistory={showHistory}
+          onCloseHistory={() => setShowHistory(false)}
         />
       </div>
 

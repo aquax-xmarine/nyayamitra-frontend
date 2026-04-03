@@ -135,10 +135,10 @@ export default function SignUpCard() {
 
   return (
     <div className="flex items-center justify-center">
-      <div className="w-[450px] bg-white rounded-3xl shadow-lg px-20 py-1 pt-0 pb-0">
+      <div className="w-[450px] bg-white rounded-3xl shadow-lg px-20 py-1">
 
         {/* Header */}
-        <div className="mb-4 pt-8">
+        <div className="mb-4 pt-12">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
             Welcome!
           </h1>
@@ -306,7 +306,7 @@ export default function SignUpCard() {
         </div>
 
         {/* Sign Up Link */}
-        <div className="text-center mt-4 pb-8">
+        <div className="text-center mt-4 pb-12">
           <p className="text-xs text-gray-600">
             Already a member?{' '}
             <button
