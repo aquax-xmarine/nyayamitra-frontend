@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
   const location = useLocation();
-  const selectedFile = location.state?.file || null;
+
 
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -18,6 +18,13 @@ const Dashboard = () => {
   const { user } = useAuth();
   const newChatRef = useRef(null)
   const navigate = useNavigate();
+
+  const fileHistoryMode = location.state?.fileHistoryMode || false;
+  const selectedFile = !fileHistoryMode ? (location.state?.file || null) : null;
+  const historyFile = fileHistoryMode ? (location.state?.file || null) : null;
+
+
+
 
   const [view, setView] = useState('chat');
   const [showHistory, setShowHistory] = useState(
@@ -44,8 +51,11 @@ const Dashboard = () => {
       <div className='w-16 border-r shrink-0 overflow-y-auto'>
         <div className='py-3 px-2'>
           <LoginNavbarIcon
-            onNewChat={() => newChatRef.current?.()}
-            onToggleHistory={() =>setShowHistory(prev => !prev)}
+            onNewChat={() => {
+              newChatRef.current?.();
+              setShowHistory(false);  // ← add this
+            }}
+            onToggleHistory={() => setShowHistory(prev => !prev)}
           />
         </div>
       </div>
@@ -63,6 +73,8 @@ const Dashboard = () => {
           onNewChatReady={(fn) => { newChatRef.current = fn; }}
           showHistory={showHistory}
           onCloseHistory={() => setShowHistory(false)}
+          fileHistoryMode={fileHistoryMode}
+          historyFile={historyFile}
         />
       </div>
 

@@ -17,6 +17,11 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
   const fileInputRef = useRef(null);
   const [bookmarkRootId, setBookmarkRootId] = useState(null);
 
+  const handleFileHistory = (file) => {
+    closeMenu();
+    navigate('/dashboard', { state: { fileHistoryMode: true, file } });
+  };
+
   const handleRenameFile = () => {
     if (!contextMenu.file) return;
 
@@ -99,7 +104,7 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
 
   const handleAskNyayamitra = (file) => {
     closeMenu();
-    navigate('/dashboard', { state: { file } }); // pass file in state
+    navigate('/dashboard', { state: { file, fileHistoryMode: false } }); // pass file in state
   };
 
   const [trashRootId, setTrashRootId] = useState(null);
@@ -147,25 +152,25 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
 
 
     async function loadFiles() {
-  try {
-    const data = await fileAPI.getFilesByContainer(selectedContainerId);
-    let filesWithBookmark = data.map(f => ({
-      ...f,
-      bookmarked: f.is_bookmarked
-    }));
+      try {
+        const data = await fileAPI.getFilesByContainer(selectedContainerId);
+        let filesWithBookmark = data.map(f => ({
+          ...f,
+          bookmarked: f.is_bookmarked
+        }));
 
-    // Sort by most recently opened if in recent container
-    if (selectedContainerId === recentRootId) {
-      filesWithBookmark = filesWithBookmark.sort(
-        (a, b) => new Date(b.last_opened_at) - new Date(a.last_opened_at)
-      );
+        // Sort by most recently opened if in recent container
+        if (selectedContainerId === recentRootId) {
+          filesWithBookmark = filesWithBookmark.sort(
+            (a, b) => new Date(b.last_opened_at) - new Date(a.last_opened_at)
+          );
+        }
+
+        setFiles(filesWithBookmark);
+      } catch (err) {
+        console.error('Failed to load files', err);
+      }
     }
-
-    setFiles(filesWithBookmark);
-  } catch (err) {
-    console.error('Failed to load files', err);
-  }
-}
 
     loadFiles();
   }, [selectedContainerId, refreshTrigger, trashChildIds]);
@@ -367,6 +372,15 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
                   >
                     <img src={law} alt="file" className="w-4 h-4 object-contain" />
                     <span>Ask Nyayamitra</span>
+                  </button>
+
+
+                  <button
+                    className="context-btn flex items-center gap-5 w-full text-left"
+                    onClick={() => handleFileHistory(contextMenu.file)}
+                  >
+                    <img src={law} alt="file" className="w-4 h-4 object-contain" />
+                    <span>File History</span>
                   </button>
 
                   <button

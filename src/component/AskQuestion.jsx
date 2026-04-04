@@ -6,8 +6,9 @@ import logo from '../assets/logo.png';
 import API_URL from '../config/api';
 import remarkGfm from 'remark-gfm';
 import cross_img from '../assets/cross_img.png';
+import law from '../assets/black_law.png';
 
-const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialFile = null, questionFiles = [], user, sessionIdToLoad = null, onNewChatReady, showHistory, onCloseHistory, }) => {
+const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialFile = null, questionFiles = [], user, sessionIdToLoad = null, onNewChatReady, showHistory, onCloseHistory, fileHistoryMode = false, historyFile = null }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState([]); // list of {question, answer, files}
@@ -42,6 +43,15 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=000000&color=ffffff&size=80&bold=true`;
   };
 
+  useEffect(() => {
+    if (initialFile) {
+      setDocumentId(null);
+      setSessionId(null);
+      sessionStorage.removeItem('documentId');
+      sessionStorage.removeItem('chatSessionId');
+    }
+  }, []);
+
   const handleNewChat = () => {
     console.log('handleNewChat called!');
     setDocumentId(null);
@@ -52,6 +62,28 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
     sessionStorage.removeItem('documentId');
     sessionStorage.removeItem('chatSessionId');
   };
+
+  useEffect(() => {
+    if (!fileHistoryMode || !historyFile) return;
+
+    const loadFileHistory = async () => {
+      const res = await fetch(`${API_URL}/api/files/${historyFile.id}/questions`, {
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      // Convert to messages format
+      const loaded = data.map(row => ({
+        question: row.question,
+        answer: row.answer,
+        files: []
+      }));
+
+      setMessages(loaded);
+    };
+
+    loadFileHistory();
+  }, [fileHistoryMode, historyFile]);
 
   useEffect(() => {
     console.log('Registering handleNewChat:', handleNewChat);
@@ -82,12 +114,10 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
       const data = await msgRes.json();
       const filesData = await filesRes.json();
 
-      const loaded = data.map((row, i) => ({
+      const loaded = data.map((row) => ({
         question: row.question,
         answer: row.answer,
-        files: i === 0 && Array.isArray(filesData)
-          ? filesData.map(f => ({ name: f.name, file_path: f.file_path }))
-          : []
+        files: Array.isArray(row.files) ? row.files : []
       }));
       setMessages(loaded);
       setSessionId(sessionIdToLoad);
@@ -118,12 +148,10 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
       const data = await msgRes.json();
       const filesData = await filesRes.json();
 
-      const loaded = data.map((row, i) => ({
+      const loaded = data.map((row) => ({
         question: row.question,
         answer: row.answer,
-        files: i === 0 && Array.isArray(filesData)
-          ? filesData.map(f => ({ name: f.name, file_path: f.file_path }))
-          : []
+        files: Array.isArray(row.files) ? row.files : []
       }));
       setMessages(loaded);
     };
@@ -151,6 +179,8 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
 
     const currentQuestion = inputValue;
     const currentFiles = [...attachedFiles];
+    let fileId = null;
+    //const fileId = uploadData?.files?.[0]?.id || null;
 
     setMessages(prev => [...prev, { question: currentQuestion, answer: null, files: currentFiles }]);
     setInputValue('');
@@ -180,10 +210,16 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         const refreshRes = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
         const refreshData = await refreshRes.json();
         if (Array.isArray(refreshData)) setSessionList(refreshData);
+        
       }
+      // MOVE LOG HERE - outside the if block
+console.log('currentSessionId:', currentSessionId);
+console.log('sessionId state:', sessionId);
 
-      // Step 2: Upload files with session_id
+      // Step 2: Upload files
       const newFiles = currentFiles.filter(f => f instanceof File);
+      const existingFiles = currentFiles.filter(f => !(f instanceof File) && f.id);
+
       if (newFiles.length > 0) {
         const uploadFormData = new FormData();
         uploadFormData.append('source', 'chat');
@@ -195,37 +231,60 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
           body: uploadFormData
         });
         const uploadData = await uploadRes.json();
-        console.log('Upload result:', uploadData.files);
+        fileId = uploadData?.files?.[0]?.id || null;
+      }
+
+      // If file came from file manager, use its existing id directly
+      if (!fileId && existingFiles.length > 0) {
+        fileId = existingFiles[0].id;
       }
 
       // Step 3: Send to Python
       const formData = new FormData();
       formData.append('question', currentQuestion);
       formData.append('document_id', activeContainerId);
-      for (const file of currentFiles) {
-        if (file instanceof File) formData.append('files', file);
-      }
 
+      for (const file of currentFiles) {
+        if (file instanceof File) {
+          formData.append('files', file);
+        } else if (file.file_path) {
+          // Existing file from file manager — fetch and re-send
+          const fileRes = await fetch(`${API_URL}/uploads/${file.file_path}`, { credentials: 'include' });
+          const blob = await fileRes.blob();
+          const reconstructed = new File([blob], file.name, { type: blob.type });
+          formData.append('files', reconstructed);
+        }
+      }
       const response = await fetch(`${API_URL}/api/ask`, {
         method: 'POST',
         credentials: 'include',
         body: formData
       });
       const data = await response.json();
-
       const newDocumentId = data.document_id || activeContainerId;
       setDocumentId(newDocumentId);
       sessionStorage.setItem('documentId', newDocumentId);
-
       const answerText = data?.mode === 'summary' ? data.summary : data?.answer || 'No answer found.';
 
-      // Step 4: Save Q&A pair to DB
-      await fetch(`${API_URL}/api/chats/sessions/${currentSessionId}/messages`, {
+      // Step 4: Save message to DB — get back the message id
+      const msgRes = await fetch(`${API_URL}/api/chats/sessions/${currentSessionId}/messages`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: currentQuestion, answer: answerText })
+        body: JSON.stringify({ question: currentQuestion, answer: answerText, file_id: fileId })
       });
+      const msgData = await msgRes.json();
+      const messageId = msgData.id;
+
+      // Step 5: Link file to message — NEW STEP
+      if (fileId && messageId) {
+        await fetch(`${API_URL}/api/files/${fileId}/message-id`, {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_id: messageId })
+        });
+      }
 
       setMessages(prev => {
         const updated = [...prev];
@@ -296,10 +355,10 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
                     const filesRes = await fetch(`${API_URL}/api/chats/sessions/${session.id}/files`, { credentials: 'include' });
                     const filesData = await filesRes.json();
                     if (Array.isArray(data)) {
-                      setMessages(data.map((row, i) => ({
+                      setMessages(data.map((row) => ({
                         question: row.question,
                         answer: row.answer,
-                        files: i === 0 ? (Array.isArray(filesData) ? filesData.map(f => ({ name: f.name, file_path: f.file_path })) : []) : []
+                        files: Array.isArray(row.files) ? row.files : []
                       })));
                     }
                     onCloseHistory();
@@ -322,6 +381,16 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
 
       <div>
         <h1 className="text-xl font-regular text-gray-800 py-5 leading-none">NYAYAMITRA</h1>
+        {fileHistoryMode && historyFile && (
+          <div className="pl-70 pr-50 mb-2">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
+              <img src={law} alt="law" className="w-4 h-4" />
+              <p className="text-xs text-slate-500">
+                Showing history for: <span className="font-medium text-slate-700">{historyFile.name}</span>
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto pl-70 pr-50 -mt-10 custom-scrollbar">
@@ -435,78 +504,79 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         <div ref={bottomRef} />
       </div>
 
+      {!fileHistoryMode && (
+        <form onSubmit={handleSubmit} className="mt-auto py-4 pl-70 pr-50">
+          <div className="flex items-end gap-2 border-2 border-gray-300 rounded-3xl p-2 focus-within:border-black">
 
-      <form onSubmit={handleSubmit} className="mt-auto py-4 pl-70 pr-50">
-        <div className="flex items-end gap-2 border-2 border-gray-300 rounded-3xl p-2 focus-within:border-black">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              className="self-end w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700 ml-5 mr-2"
+              title="Attach file"
+              style={{ border: 'none', background: 'transparent', padding: 0, outline: 'none' }}
+            >
+              <img src={addIcon} alt="Add" className="w-5 h-5" />
+            </button>
 
-          <button
-            type="button"
-            onClick={() => fileInputRef.current.click()}
-            className="self-end w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700 ml-5 mr-2"
-            title="Attach file"
-            style={{ border: 'none', background: 'transparent', padding: 0, outline: 'none' }}
-          >
-            <img src={addIcon} alt="Add" className="w-5 h-5" />
-          </button>
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept=".pdf,.doc,.docx,.txt"
-            multiple
-            onChange={(e) => {
-              const newFiles = Array.from(e.target.files);
-              setAttachedFiles((prevFiles) => {
-                const existingNames = new Set(prevFiles.map(f => f.name));
-                return [...prevFiles, ...newFiles.filter(f => !existingNames.has(f.name))];
-              });
-              e.target.value = null;
-            }}
-          />
-
-          <div className="flex flex-col flex-1">
-            {attachedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-1">
-                {attachedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 border border-gray-300 rounded-xl text-sm text-gray-600 px-2 py-2">
-                    📄
-                    <span className="truncate max-w-xs">{file.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => setAttachedFiles(attachedFiles.filter((_, i) => i !== index))}
-                      className="text-red-500 hover:text-red-700"
-                      style={{ border: 'none', padding: 0, outline: 'none' }}
-                    >✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={attachedFiles.length > 0 ? '' : 'Ask your legal question here...'}
-              rows="1"
-              disabled={isLoading} //  use isLoading
-              className="w-full px-0 py-2 focus:outline-none resize-none bg-transparent overflow-y-auto max-h-40"
-              style={{ minHeight: '2.5rem' }}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept=".pdf,.doc,.docx,.txt"
+              multiple
+              onChange={(e) => {
+                const newFiles = Array.from(e.target.files);
+                setAttachedFiles((prevFiles) => {
+                  const existingNames = new Set(prevFiles.map(f => f.name));
+                  return [...prevFiles, ...newFiles.filter(f => !existingNames.has(f.name))];
+                });
+                e.target.value = null;
+              }}
             />
+
+            <div className="flex flex-col flex-1">
+              {attachedFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-1">
+                  {attachedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 border border-gray-300 rounded-xl text-sm text-gray-600 px-2 py-2">
+                      📄
+                      <span className="truncate max-w-xs">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setAttachedFiles(attachedFiles.filter((_, i) => i !== index))}
+                        className="text-red-500 hover:text-red-700"
+                        style={{ border: 'none', padding: 0, outline: 'none' }}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={attachedFiles.length > 0 ? '' : 'Ask your legal question here...'}
+                rows="1"
+                disabled={isLoading} //  use isLoading
+                className="w-full px-0 py-2 focus:outline-none resize-none bg-transparent overflow-y-auto max-h-40"
+                style={{ minHeight: '2.5rem' }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!canSend}
+              className={`self-end rounded-full w-10 h-10 flex items-center justify-center mr-2 ${!canSend ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'}`}
+              title="Send"
+              style={{ border: 'none', padding: 0, outline: 'none' }}
+            >
+              <img src={SendIcon} alt="Send" className="w-5 h-5" />
+            </button>
+
           </div>
-
-          <button
-            type="submit"
-            disabled={!canSend}
-            className={`self-end rounded-full w-10 h-10 flex items-center justify-center mr-2 ${!canSend ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'}`}
-            title="Send"
-            style={{ border: 'none', padding: 0, outline: 'none' }}
-          >
-            <img src={SendIcon} alt="Send" className="w-5 h-5" />
-          </button>
-
-        </div>
-      </form>
+        </form>
+      )}
     </div >
   );
 };
