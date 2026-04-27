@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import LoginNavbarAsk from '../component/NavBarProfileAsk.jsx';
-import LoginNavbarIcon from '../component/NavBarProfileIcon';
+import LoginNavbarIcon from '../component/NavBarProfileIcon.jsx';
 import LoginNavbarProfile from '../component/NavBarProfileProfile';
 import FileManagerLeftSection from '../component/FileManagerLeftSection.jsx';
 import FileManagerRightSection from '../component/FileManagerRightSection.jsx';
@@ -30,7 +30,7 @@ export default function FileManager() {
 
   const navigate = useNavigate();
 
-
+ 
 
   // width of left section (px)
   const [leftWidth, setLeftWidth] = useState(300); // default 30%

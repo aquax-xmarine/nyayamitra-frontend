@@ -1,73 +1,58 @@
-// import { useState, useEffect } from 'react';
-// import API_URL from '../config/api';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import API_URL from '../config/api';
 
-// const ChatHistory = ({ onSelectSession }) => {
-//   const [sessions, setSessions] = useState([]);
-//   const [loading, setLoading] = useState(true);
+export default function History() {
+    const [sessionList, setSessionList] = useState([]);
+    const navigate = useNavigate();
 
-//   useEffect(() => {
-//     const fetchSessions = async () => {
-//       try {
-//         const res = await fetch(`${API_URL}/api/chats/sessions`, {
-//           credentials: 'include'
-//         });
-//         const data = await res.json();
-//         setSessions(data);
-//       } catch (err) {
-//         console.error('Failed to fetch sessions:', err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchSessions();
-//   }, []);
+    useEffect(() => {
+        const fetchSessions = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
+                const data = await res.json();
+                if (Array.isArray(data)) setSessionList(data);
+            } catch (err) {
+                console.error('Failed to fetch sessions:', err);
+            }
+        };
+        fetchSessions();
+    }, []);
 
-//   const deleteSession = async (e, id) => {
-//     e.stopPropagation();
-//     try {
-//       await fetch(`${API_URL}/api/chats/sessions/${id}`, {
-//         method: 'DELETE',
-//         credentials: 'include'
-//       });
-//       setSessions(prev => prev.filter(s => s.id !== id));
-//     } catch (err) {
-//       console.error('Failed to delete session:', err);
-//     }
-//   };
+    return (
+        <div className="flex flex-col h-full px-6 py-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4">Chat History</p>
+            <div className="h-px bg-gray-100 mb-4" />
 
-//   if (loading) return <p className="text-gray-400 p-6">Loading...</p>;
-
-//   return (
-//     <div className="p-6">
-//       <h1 className="text-xl font-semibold text-gray-800 mb-6">Chat History</h1>
-//       {sessions.length === 0 ? (
-//         <p className="text-gray-400 text-sm">No chats yet.</p>
-//       ) : (
-//         <div className="flex flex-col gap-3">
-//           {sessions.map(session => (
-//             <div
-//               key={session.id}
-//               onClick={() => onSelectSession(session.id)}
-//               className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
-//             >
-//               <div>
-//                 <p className="text-sm font-medium text-gray-800">{session.title}</p>
-//                 <p className="text-xs text-gray-400 mt-1">
-//                   {new Date(session.created_at).toLocaleString()}
-//                 </p>
-//               </div>
-//               <button
-//                 onClick={(e) => deleteSession(e, session.id)}
-//                 className="text-red-400 hover:text-red-600 text-xs ml-4"
-//               >
-//                 Delete
-//               </button>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default ChatHistory;
+            <div className="flex-1 overflow-y-auto flex flex-col gap-0 custom-scrollbar">
+                {sessionList.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-40 gap-2">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
+                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                        </svg>
+                        <p className="text-xs text-gray-400">No chats yet</p>
+                    </div>
+                ) : (
+                    sessionList.map((session) => (
+                        <button
+                            key={session.id}
+                            onClick={() => {
+                                sessionStorage.setItem('chatSessionId', session.id);
+                                if (session.document_id) {
+                                    sessionStorage.setItem('documentId', session.document_id);
+                                }
+                                navigate('/dashboard');
+                            }}
+                            className="w-full text-left px-3 py-3 rounded-[15px] hover:bg-gray-50 transition-all group"
+                            style={{ border: 'none', outline: 'none', background: 'transparent' }}
+                        >
+                            <p className="text-sm text-gray-700 truncate font-normal leading-snug group-hover:text-black transition-colors">
+                                {session.title || 'Untitled Chat'}
+                            </p>
+                        </button>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+}

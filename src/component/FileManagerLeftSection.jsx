@@ -103,15 +103,15 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
 
     const restoreSubcollection = async (nodeId) => {
         try {
-            // 1️⃣ Fetch original location
+            // 1. Fetch original location
             const originalSection = await containerAPI.getOriginalSection(nodeId);
             const originalParentId = await containerAPI.getOriginalParent(nodeId);
 
-            // 2️⃣ Update container to original section and parent
+            // 2. Update container to original section and parent
             await containerAPI.updateContainerSection(nodeId, originalSection);
             await containerAPI.updateContainerParent(nodeId, originalParentId);
 
-            // 3️⃣ Update state
+            // 3. Update state
             setTrees(prev => {
                 const nodeToRestore = findNodeById(prev.trash, nodeId);
                 if (!nodeToRestore) return prev;
@@ -179,18 +179,14 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
             const nodeToMove = findNodeById(trees[section], nodeId);
             const allIds = collectAllDescendantIds(nodeToMove);
 
-            // 1️⃣ Save original location for all descendants
+            // 1. Save original location for all descendants
             await containerAPI.saveOriginalLocation(nodeId);
 
             // Only top node parent_id should change
             await containerAPI.updateContainerParent(nodeId, trashRoot.id);
             await containerAPI.updateContainerSection(nodeId, 'trash');
 
-            // // Nested children: keep parent_id, just update section
-            // const childIds = allIds.filter(id => id !== nodeId);
-            // await Promise.all(childIds.map(id =>
-            //     containerAPI.updateContainerSection(id, 'trash')
-            // ));
+        
         } catch (err) {
             console.error('Failed to move container to trash', err);
         }
@@ -422,6 +418,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                             toggle(sectionKey, node.id);
                         }
                         onSelectContainer(node);
+                        console.log('Selected node:', node); 
                         setActiveSection(null);
                     }}
                     onContextMenu={(e) => {

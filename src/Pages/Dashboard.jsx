@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import LoginNavbarAsk from '../component/AskQuestion.jsx';
-import LoginNavbarIcon from '../component/NavBarProfileIcon';
+import LoginNavbarIcon from '../component/NavBarProfileIcon.jsx';
 import LoginNavbarProfile from '../component/NavBarProfileProfile';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,6 +18,8 @@ const Dashboard = () => {
   const { user } = useAuth();
   const newChatRef = useRef(null)
   const navigate = useNavigate();
+  const [activeIcon, setActiveIcon] = useState("newChat");
+  console.log("activeIcon is:", activeIcon);
 
   const fileHistoryMode = location.state?.fileHistoryMode || false;
   const selectedFile = !fileHistoryMode ? (location.state?.file || null) : null;
@@ -27,9 +29,16 @@ const Dashboard = () => {
 
 
   const [view, setView] = useState('chat');
-  const [showHistory, setShowHistory] = useState(
-    () => location.state?.showHistory === true
-  );
+  const [showHistory, setShowHistory] = useState(false);
+  // Handle initial showHistory from navigation state separately
+  useEffect(() => {
+    if (location.state?.showHistory === true) {
+      setShowHistory(true);
+      setActiveIcon("history");
+    }
+  }, []); // only on mount
+
+  
 
 
   //  Simply receive question + answer from AskQuestion component
@@ -53,9 +62,22 @@ const Dashboard = () => {
           <LoginNavbarIcon
             onNewChat={() => {
               newChatRef.current?.();
-              setShowHistory(false);  // ← add this
+              setShowHistory(false);
+              setActiveIcon("newChat");
             }}
-            onToggleHistory={() => setShowHistory(prev => !prev)}
+            onToggleHistory={() => {
+              console.log("onToggleHistory called, setting activeIcon to history");
+              setShowHistory(prev => !prev);
+              setActiveIcon("history");  // ← add this
+            }}
+            onFileManager={() => {
+              setShowHistory(false);
+              //setActiveIcon("fileManager");   // ✅ ADD THIS
+              
+              navigate("/fileManager");             // (or whatever your route is)
+            }}
+            activeIcon={activeIcon}
+          // setActiveIcon={setActiveIcon}
           />
         </div>
       </div>

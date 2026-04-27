@@ -8,6 +8,82 @@ import { useNavigate } from 'react-router-dom';
 import restore_img from '../assets/reset.png';
 import edit_icon from '../assets/editNameIcon.png';
 import bookmark_icon from '../assets/bookmark_icon.png';
+import API_URL from '../config/api';
+import summary_icon from '../assets/Brief.png';
+import recent from '../assets/Replay.png';
+
+function SummarizeOverlay({ file, onClose }) {
+  const [summary, setSummary] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const formData = new FormData();
+        formData.append('question', 'summarize');
+
+        // Fetch the actual file bytes from your server
+        const fileRes = await fetch(`${API_URL}/uploads/${file.file_path}`, {
+          credentials: 'include'
+        });
+        const blob = await fileRes.blob();
+        const reconstructed = new File([blob], file.name, { type: blob.type });
+        formData.append('files', reconstructed);
+
+        const response = await fetch(`${API_URL}/api/ask`, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setSummary(data.mode === 'summary' ? data.summary : data.answer || 'No summary available.');
+        }
+      } catch (err) {
+        setError('Failed to generate summary. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummary();
+  }, [file]);
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+      zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center'
+    }}>
+      <div style={{
+        background: 'white', padding: '24px', borderRadius: '12px',
+        width: '560px', maxWidth: '90vw', maxHeight: '80vh',
+        display: 'flex', flexDirection: 'column', gap: '12px'
+      }}>
+        <p style={{ fontWeight: '600', fontSize: '13px' }}>Summary: {file.name}</p>
+
+        {loading && <p style={{ fontSize: '13px', color: '#888' }}>Analysing document...</p>}
+        {error && <p style={{ fontSize: '13px', color: 'red' }}>{error}</p>}
+        {!loading && !error && (
+          <p style={{ fontSize: '13px', lineHeight: '1.7', overflowY: 'auto', maxHeight: '60vh' }}>
+            {summary}
+          </p>
+        )}
+
+        <button
+          onClick={onClose}
+          style={{ alignSelf: 'flex-end', padding: '6px 16px', borderRadius: '8px', border: '1px solid #ccc', cursor: 'pointer' }}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
 
 
 export default function FileManagerRightSection({ selectedContainerId, refreshTrigger, onOpenFile, onFileDeleted }) {
@@ -48,6 +124,11 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
     }
     fetchRecentRoot();
   }, []);
+
+  useEffect(() => {
+    console.log('selectedContainerId:', selectedContainerId);
+    console.log('recentRootId:', recentRootId);
+  }, [selectedContainerId, recentRootId]);
 
   const handleToggleBookmark = async () => {
     if (!contextMenu.file) return;
@@ -144,7 +225,11 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
   useEffect(() => {
     if (!selectedContainerId) return;
 
-    // ⛔ Block file loading for trash root AND its children
+    console.log('trashRootId:', trashRootId);
+    console.log('trashChildIds has selectedContainerId?', trashChildIds.has(selectedContainerId));
+    console.log('trashChildIds:', [...trashChildIds]);
+
+    //  Block file loading for trash root AND its children
     if (selectedContainerId !== trashRootId && trashChildIds.has(selectedContainerId)) {
       setFiles([]);
       return;
@@ -154,6 +239,7 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
     async function loadFiles() {
       try {
         const data = await fileAPI.getFilesByContainer(selectedContainerId);
+        console.log('Files returned:', data);
         let filesWithBookmark = data.map(f => ({
           ...f,
           bookmarked: f.is_bookmarked
@@ -206,18 +292,18 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
     try {
       const file = contextMenu.file;
 
-      // 1️⃣ Save original container
+      // 1. Save original container
       await fileAPI.saveOriginalLocationFiles(file.id);
 
-      // 2️⃣ Get Trash container
+      // 2. Get Trash container
       const trashContainers = await containerAPI.getContainers('trash');
       const trashRoot = trashContainers.find(c => !c.parent_id);
       if (!trashRoot) throw new Error('Trash root not found');
 
-      // 3️⃣ Move file to Trash
+      // 3. Move file to Trash
       await fileAPI.updateFileContainer(file.id, trashRoot.id);
 
-      // 4️⃣ Update frontend state
+      // 4. Update frontend state
       setFiles(prev => prev.filter(f => f.id !== file.id));
 
       // Close tab if it's open
@@ -269,6 +355,13 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
     } catch (err) {
       console.error("Failed to restore file", err);
     }
+  };
+
+  const [summarizeFile, setSummarizeFile] = useState(null);
+
+  const handleSummarize = (file) => {
+    closeMenu();           // close the right-click menu
+    setSummarizeFile(file); // store the file → this will trigger the overlay
   };
 
   return (
@@ -374,12 +467,20 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
                     <span>Ask Nyayamitra</span>
                   </button>
 
+                  <button
+                    className="context-btn flex items-center gap-5 w-full text-left"
+                    onClick={() => handleSummarize(contextMenu.file)}
+                  >
+                    <img src={summary_icon} alt="file" className="w-4 h-4 object-contain" />
+                    <span>Summarize</span>
+                  </button>
+
 
                   <button
                     className="context-btn flex items-center gap-5 w-full text-left"
                     onClick={() => handleFileHistory(contextMenu.file)}
                   >
-                    <img src={law} alt="file" className="w-4 h-4 object-contain" />
+                    <img src={recent} alt="file" className="w-4 h-4 object-contain" />
                     <span>File History</span>
                   </button>
 
@@ -439,27 +540,18 @@ export default function FileManagerRightSection({ selectedContainerId, refreshTr
               )}
 
 
-
-              {/* <button
-                className="context-btn flex items-center gap-5 w-full text-left"
-                onClick={() => { console.log('Ask Nyayamitra', contextMenu.file); closeMenu(); }}
-              >
-                <img src={bookmark} alt="file" className="w-4 h-4 object-contain" />
-                <span>Bookmark</span>
-              </button>
-
-
-
-              <button
-                className="context-btn flex items-center gap-5 w-full text-left"
-                onClick={() => { console.log('Ask Nyayamitra', contextMenu.file); closeMenu(); }}
-              >
-                <img src={trash} alt="file" className="w-4 h-4 object-contain" />
-                <span>Move to Trash</span>
-              </button> */}
             </div>
+
+
           </div>
         </>
+      )}
+
+      {summarizeFile && (
+        <SummarizeOverlay
+          file={summarizeFile}
+          onClose={() => setSummarizeFile(null)}
+        />
       )}
     </div>
   );

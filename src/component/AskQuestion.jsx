@@ -7,6 +7,7 @@ import API_URL from '../config/api';
 import remarkGfm from 'remark-gfm';
 import cross_img from '../assets/cross_img.png';
 import law from '../assets/black_law.png';
+import HistoryPanel from './HistoryPanel';
 
 const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialFile = null, questionFiles = [], user, sessionIdToLoad = null, onNewChatReady, showHistory, onCloseHistory, fileHistoryMode = false, historyFile = null }) => {
   const [inputValue, setInputValue] = useState('');
@@ -27,7 +28,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
   //  Use isLoading (local) not loading (prop)
   const canSend = (!isLoading) && (inputValue.trim() || attachedFiles.length > 0);
 
-  const [sessionList, setSessionList] = useState([]);
+  //const [sessionList, setSessionList] = useState([]);
 
   const [sessionId, setSessionId] = useState(
     () => sessionStorage.getItem('chatSessionId') || null
@@ -47,10 +48,12 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
     if (initialFile) {
       setDocumentId(null);
       setSessionId(null);
+      setMessages([]);
+      setAttachedFiles([initialFile]);
       sessionStorage.removeItem('documentId');
       sessionStorage.removeItem('chatSessionId');
     }
-  }, []);
+  }, [initialFile?.id]);
 
   const handleNewChat = () => {
     console.log('handleNewChat called!');
@@ -67,6 +70,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
     if (!fileHistoryMode || !historyFile) return;
 
     const loadFileHistory = async () => {
+      setMessages([]);
       const res = await fetch(`${API_URL}/api/files/${historyFile.id}/questions`, {
         credentials: 'include'
       });
@@ -121,7 +125,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
       }));
       setMessages(loaded);
       setSessionId(sessionIdToLoad);
-      console.log('✅ Session loaded:', loaded.length, 'messages');
+      console.log('Session loaded:', loaded.length, 'messages');
 
       const sessionRes = await fetch(`${API_URL}/api/chats/sessions/${sessionIdToLoad}`, {
         credentials: 'include'
@@ -139,6 +143,8 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
 
   useEffect(() => {
     if (!sessionId) return;
+    if (initialFile) return;
+    if (fileHistoryMode) return;
 
     const loadMessages = async () => {
       const [msgRes, filesRes] = await Promise.all([
@@ -160,18 +166,18 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
   }, []); // empty array — only runs once on mount
 
 
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
-        const data = await res.json();
-        if (Array.isArray(data)) setSessionList(data);
-      } catch (err) {
-        console.error('Failed to fetch sessions:', err);
-      }
-    };
-    fetchSessions();
-  }, []);
+  // useEffect(() => {
+  //   const fetchSessions = async () => {
+  //     try {
+  //       const res = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
+  //       const data = await res.json();
+  //       if (Array.isArray(data)) setSessionList(data);
+  //     } catch (err) {
+  //       console.error('Failed to fetch sessions:', err);
+  //     }
+  //   };
+  //   fetchSessions();
+  // }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -207,14 +213,14 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         sessionStorage.setItem('chatSessionId', currentSessionId);
         setSessionId(currentSessionId);
 
-        const refreshRes = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
-        const refreshData = await refreshRes.json();
-        if (Array.isArray(refreshData)) setSessionList(refreshData);
-        
+        // const refreshRes = await fetch(`${API_URL}/api/chats/sessions`, { credentials: 'include' });
+        // const refreshData = await refreshRes.json();
+        // if (Array.isArray(refreshData)) setSessionList(refreshData);
+
       }
       // MOVE LOG HERE - outside the if block
-console.log('currentSessionId:', currentSessionId);
-console.log('sessionId state:', sessionId);
+      console.log('currentSessionId:', currentSessionId);
+      console.log('sessionId state:', sessionId);
 
       // Step 2: Upload files
       const newFiles = currentFiles.filter(f => f instanceof File);
@@ -307,74 +313,16 @@ console.log('sessionId state:', sessionId);
   return (
     <div className="h-full flex flex-col relative">
 
+
       {showHistory && (
-        <div className="fixed left-16 top-0 h-full w-72 bg-white border-r border-gray-100 z-50 flex flex-col">
-
-          {/* Header */}
-          <div className="px-5 pt-6 pb-4" style={{ position: 'relative' }}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">CHAT HISTORY</p>
-            <button
-              onClick={onCloseHistory}
-              style={{
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                position: 'absolute',
-                top: '15px',
-                right: '0px',
-                cursor: 'pointer'
-              }}
-            >
-              <img src={cross_img} alt="close" className="w-4 h-4 object-contain" />
-            </button>
-            <div className="h-px bg-gray-100 mt-3" />
-          </div>
-
-          {/* Session list */}
-          <div className="flex-1 overflow-y-auto px-0 pb-6 flex flex-col gap-0 custom-scrollbar">
-            {sessionList.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                </svg>
-                <p className="text-xs text-gray-400">No chats yet</p>
-              </div>
-            ) : (
-              sessionList.map((session, index) => (
-                <button
-                  key={session.id}
-                  onClick={async () => {
-                    if (session.document_id) {
-                      setDocumentId(session.document_id);
-                      sessionStorage.setItem('documentId', session.document_id);
-                    }
-                    setSessionId(session.id);
-                    sessionStorage.setItem('chatSessionId', session.id);
-                    const res = await fetch(`${API_URL}/api/chats/sessions/${session.id}/messages`, { credentials: 'include' });
-                    const data = await res.json();
-                    const filesRes = await fetch(`${API_URL}/api/chats/sessions/${session.id}/files`, { credentials: 'include' });
-                    const filesData = await filesRes.json();
-                    if (Array.isArray(data)) {
-                      setMessages(data.map((row) => ({
-                        question: row.question,
-                        answer: row.answer,
-                        files: Array.isArray(row.files) ? row.files : []
-                      })));
-                    }
-                    onCloseHistory();
-                  }}
-                  className={`w-full text-left px-0 py-3 rounded-lg transition-all group hover:bg-gray-50 ${sessionId === session.id ? 'bg-gray-50' : ''}`}
-                  style={{ border: 'none', outline: 'none', background: sessionId === session.id ? '#f9fafb' : 'transparent', borderRadius: '15px' }}
-                >
-
-                  <p className="text-sm text-gray-700 truncate font-normal leading-snug group-hover:text-black transition-colors">
-                    {session.title || 'Untitled Chat'}
-                  </p>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
+        <HistoryPanel
+          onCloseHistory={onCloseHistory}
+          onSelectSession={({ sessionId, documentId, messages }) => {
+            setSessionId(sessionId);
+            setDocumentId(documentId);
+            setMessages(messages);
+          }}
+        />
       )}
 
 
@@ -393,7 +341,7 @@ console.log('sessionId state:', sessionId);
         )}
       </div>
 
-      <div className="flex-1 overflow-auto pl-70 pr-50 -mt-10 custom-scrollbar">
+      <div className="flex-1 overflow-auto pl-70 pr-50 custom-scrollbar">
 
         {messages.map((msg, index) => (
           <div key={index}>
@@ -582,3 +530,7 @@ console.log('sessionId state:', sessionId);
 };
 
 export default AskQuestion;
+
+
+
+

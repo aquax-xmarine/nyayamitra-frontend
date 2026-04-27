@@ -12,7 +12,7 @@ import Profilepage from './Pages/ProfilePage.jsx';
 import Onboarding from './Pages/Onboarding.jsx';
 import Dashboard from './Pages/Dashboard.jsx'
 import FileManager from './Pages/FileManager.jsx'
-// import ChatHistory from './Pages/ChatHistory.jsx' 
+import ChatHistory from './Pages/ChatHistory.jsx' 
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -26,7 +26,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/fileManager" element={<FileManager />} />
-          {/* <Route path="/chat-history" element={<ChatHistory />} /> */}
+          <Route path="/chat-history" element={<ChatHistory />} />
           
         </Routes>
       </AuthProvider>
