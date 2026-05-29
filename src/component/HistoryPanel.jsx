@@ -46,10 +46,10 @@ export default function HistoryPanel({ onCloseHistory, onSelectSession }) {
     };
 
     return (
-        <div className="fixed left-16 top-0 h-full w-72 bg-white border-r border-gray-100 z-50 flex flex-col">
+        <div className="fixed left-16 top-0 h-full w-72 bg-white border-r border-gray-300 z-50 flex flex-col">
 
             {/* Header */}
-            <div className="px-5 pt-6 pb-4" style={{ position: 'relative' }}>
+            <div className="pl-5 pr-3 pt-6 pb-4 flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">CHAT HISTORY</p>
                 <button
                     onClick={onCloseHistory}
@@ -57,19 +57,18 @@ export default function HistoryPanel({ onCloseHistory, onSelectSession }) {
                         border: 'none',
                         outline: 'none',
                         background: 'transparent',
-                        position: 'absolute',
-                        top: '15px',
-                        right: '0px',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        marginRight: '-25px'
+
                     }}
                 >
                     <img src={cross_img} alt="close" className="w-4 h-4 object-contain" />
                 </button>
-                <div className="h-px bg-gray-100 mt-3" />
             </div>
+            <div className="h-px bg-gray-300 mx-2 mb-2 mt-2" />
 
             {/* Session list */}
-            <div className="flex-1 overflow-y-auto px-0 pb-6 flex flex-col gap-0 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-0 pb-6 flex flex-col gap-0 custom-scrollbar" style={{ paddingLeft: '1px', paddingRight: '1px' }}>
                 {sessionList.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-40 gap-2">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
@@ -79,20 +78,31 @@ export default function HistoryPanel({ onCloseHistory, onSelectSession }) {
                     </div>
                 ) : (
                     sessionList.map((session) => (
-                        <button
-                            key={session.id}
-                            onClick={() => handleSessionClick(session)}
-                            className={`w-full text-left px-3 py-3 rounded-[15px] transition-all group hover:bg-gray-50`}
-                            style={{
-                                border: 'none',
-                                outline: 'none',
-                                background: activeSessionId === session.id ? '#f9fafb' : 'transparent'
-                            }}
-                        >
-                            <p className="text-sm text-gray-700 truncate font-normal leading-snug group-hover:text-black transition-colors">
-                                {session.title || 'Untitled Chat'}
-                            </p>
-                        </button>
+                        <div style={{ paddingLeft: '12px', paddingRight: '12px', marginBottom: '7px' }} >
+                            <button
+                                key={session.id}
+                                onClick={() => handleSessionClick(session)}
+                                className={`w-full text-left transition-all group`}
+                                // hover color
+                                onMouseEnter={e => e.currentTarget.style.background = '#448AFF0D'}
+
+                                // active/clicked color
+                                style={{
+                                    border: 'none',
+                                    outline: 'none',
+                                    background: activeSessionId === session.id ? '#448AFF4D' : 'transparent',
+                                    padding: '5px 18px',
+                                    borderRadius: '10px',
+                                }}
+
+                                // on mouse leave restore correctly
+                                onMouseLeave={e => e.currentTarget.style.background = activeSessionId === session.id ? '#448AFF4D' : 'transparent'}
+                            >
+                                <p className="text-gray-700 truncate font-normal leading-snug group-hover:text-black transition-colors" style={{ fontSize: '13px' }}>
+                                    {session.title || 'Untitled Chat'}
+                                </p>
+                            </button>
+                        </div>
                     ))
                 )}
             </div>

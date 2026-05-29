@@ -11,39 +11,77 @@ import bookmark_icon from '../assets/bookmark_icon.png';
 import API_URL from '../config/api';
 import summary_icon from '../assets/Brief.png';
 import recent from '../assets/Replay.png';
+import ReactMarkdown from 'react-markdown';
+import arrow_left from '../assets/leftArrow.png';   // your left arrow image
+import arrow_right from '../assets/rightArrow.png';
 
 function SummarizeOverlay({ file, onClose }) {
   const [summary, setSummary] = useState('');
+  const [summaryHistory, setSummaryHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const fileId = file.original_file_id || file.id;
+
+  const generateSummary = async () => {
+    const formData = new FormData();
+    formData.append('question', 'summarize');
+
+    const fileRes = await fetch(`${API_URL}/uploads/${file.file_path}`, {
+      credentials: 'include'
+    });
+    const blob = await fileRes.blob();
+    const reconstructed = new File([blob], file.name, { type: blob.type });
+    formData.append('files', reconstructed);
+
+    const response = await fetch(`${API_URL}/api/ask`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+
+    const data = await response.json();
+    return data.mode === 'summary'
+      ? data.summary
+      : data.answer || 'No summary available.';
+  };
+
+  const saveSummary = async (text) => {
+    const res = await fetch(`${API_URL}/api/files/${fileId}/summaries`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ summary: text })
+    });
+    return res.json();
+  };
 
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const formData = new FormData();
-        formData.append('question', 'summarize');
-
-        // Fetch the actual file bytes from your server
-        const fileRes = await fetch(`${API_URL}/uploads/${file.file_path}`, {
+        // Fetch existing summaries
+        const res = await fetch(`${API_URL}/api/files/${fileId}/summaries`, {
           credentials: 'include'
         });
-        const blob = await fileRes.blob();
-        const reconstructed = new File([blob], file.name, { type: blob.type });
-        formData.append('files', reconstructed);
+        const data = await res.json();
 
-        const response = await fetch(`${API_URL}/api/ask`, {
-          method: 'POST',
-          credentials: 'include',
-          body: formData
-        });
-
-        const data = await response.json();
-
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setSummary(data.mode === 'summary' ? data.summary : data.answer || 'No summary available.');
+        if (data.summaries?.length > 0) {
+          setSummary(data.summaries[0].summary); // latest
+          setSummaryHistory(data.summaries);
+          setCurrentIndex(0);
+          return;
         }
+
+        // No summary yet — generate one
+        const generated = await generateSummary();
+        setSummary(generated);
+
+        const saved = await saveSummary(generated);
+        setSummaryHistory([saved.summary]);
+
       } catch (err) {
         setError('Failed to generate summary. Please try again.');
       } finally {
@@ -53,6 +91,24 @@ function SummarizeOverlay({ file, onClose }) {
 
     fetchSummary();
   }, [file]);
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    setError(null);
+    try {
+      const generated = await generateSummary();
+      setSummary(generated);
+
+      const saved = await saveSummary(generated);
+      // Prepend new summary to history
+      setSummaryHistory(prev => [saved.summary, ...prev]);
+      setCurrentIndex(0);
+    } catch (err) {
+      setError('Failed to regenerate summary. Please try again.');
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   return (
     <div style={{
@@ -64,27 +120,119 @@ function SummarizeOverlay({ file, onClose }) {
         width: '560px', maxWidth: '90vw', maxHeight: '80vh',
         display: 'flex', flexDirection: 'column', gap: '12px'
       }}>
-        <p style={{ fontWeight: '600', fontSize: '13px' }}>Summary: {file.name}</p>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ fontWeight: '600', fontSize: '13px' }}>Summary: {file.name}</p>
 
+          {summaryHistory.length > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {/* Back — older */}
+              <button
+                onClick={() => {
+                  const next = currentIndex + 1;
+                  if (next < summaryHistory.length) {
+                    setCurrentIndex(next);
+                    setSummary(summaryHistory[next].summary);
+                  }
+                }}
+                disabled={currentIndex >= summaryHistory.length - 1}
+                style={{
+                  border: 'none', background: 'none', cursor: 'pointer', padding: '2px',
+                  outline: 'None',
+                  opacity: currentIndex >= summaryHistory.length - 1 ? 0.3 : 1
+                }}
+              >
+                <img src={arrow_left} alt="previous" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+              </button>
+
+              {/* Forward — newer */}
+              <button
+                onClick={() => {
+                  const prev = currentIndex - 1;
+                  if (prev >= 0) {
+                    setCurrentIndex(prev);
+                    setSummary(summaryHistory[prev].summary);
+                  }
+                }}
+                disabled={currentIndex === 0}
+                style={{
+                  border: 'none', background: 'none', cursor: 'pointer', padding: '2px',
+                  outline: 'None',
+                  opacity: currentIndex === 0 ? 0.3 : 1
+                }}
+              >
+                <img src={arrow_right} alt="next" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+              </button>
+
+              {/* Counter */}
+              <span style={{ fontSize: '11px', color: '#888', minWidth: '30px', textAlign: 'center' }}>
+                {summaryHistory.length - currentIndex} / {summaryHistory.length}
+              </span>
+
+
+            </div>
+          )}
+        </div>
+
+        {/* Summary Content */}
         {loading && <p style={{ fontSize: '13px', color: '#888' }}>Analysing document...</p>}
         {error && <p style={{ fontSize: '13px', color: 'red' }}>{error}</p>}
         {!loading && !error && (
-          <p style={{ fontSize: '13px', lineHeight: '1.7', overflowY: 'auto', maxHeight: '60vh' }}>
-            {summary}
-          </p>
+          <div style={{
+            fontSize: '13px', lineHeight: '1.7', overflowY: 'auto', maxHeight: '50vh',
+            paddingRight: '6px',
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#ccc transparent',
+          }}>
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => <h1 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '8px' }}>{children}</h1>,
+                h2: ({ children }) => <h2 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '6px' }}>{children}</h2>,
+                h3: ({ children }) => <h3 style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>{children}</h3>,
+                p: ({ children }) => <p style={{ marginBottom: '10px' }}>{children}</p>,
+                ul: ({ children }) => <ul style={{ paddingLeft: '18px', marginBottom: '10px', listStyleType: 'disc' }}>{children}</ul>,
+                ol: ({ children }) => <ol style={{ paddingLeft: '18px', marginBottom: '10px', listStyleType: 'decimal' }}>{children}</ol>,
+                li: ({ children }) => <li style={{ marginBottom: '4px' }}>{children}</li>,
+                strong: ({ children }) => <strong style={{ fontWeight: '600' }}>{children}</strong>,
+                em: ({ children }) => <em style={{ fontStyle: 'italic' }}>{children}</em>,
+                hr: () => <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '12px 0' }} />,
+              }}
+            >
+              {summary}
+            </ReactMarkdown>
+          </div>
         )}
 
-        <button
-          onClick={onClose}
-          style={{ alignSelf: 'flex-end', padding: '6px 16px', borderRadius: '8px', border: '1px solid #ccc', cursor: 'pointer' }}
-        >
-          Close
-        </button>
+        {/* Footer Buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Left: Regenerate + nav arrows */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={handleRegenerate}
+              disabled={loading || regenerating}
+              style={{
+                padding: '6px 16px', borderRadius: '8px', cursor: 'pointer',
+                border: '1px solid #448AFF', color: '#448AFF', background: 'none',
+                fontSize: '12px', opacity: regenerating ? 0.6 : 1
+              }}
+            >
+              {regenerating ? 'Regenerating...' : 'Regenerate'}
+            </button>
+
+
+          </div>
+
+          <button
+            onClick={onClose}
+            style={{ padding: '6px 16px', borderRadius: '8px', border: '1px solid #ccc', cursor: 'pointer', fontSize: '12px' }}
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-
 
 export default function FileManagerRightSection({ selectedContainerId, refreshTrigger, onOpenFile, onFileDeleted }) {
   const navigate = useNavigate();

@@ -1,10 +1,10 @@
 import logo from "../assets/logo.png";
 import add from "../assets/add.png";
 import folder_img from "../assets/folder_img.png";
-import { useNavigate, useLocation} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import recent from "../assets/recent_icon.png";
 
-export default function LoginNavbarIcon({ onNewChat, onToggleHistory, onFileManager,activeIcon }) {
+export default function LoginNavbarIcon({ onNewChat, onToggleHistory, onFileManager, activeIcon }) {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -15,17 +15,16 @@ export default function LoginNavbarIcon({ onNewChat, onToggleHistory, onFileMana
     // }, [location.pathname]);
 
     const iconWrapperClass = (iconName) => {
-  let isActive = activeIcon === iconName;
+        let isActive = activeIcon === iconName;
 
-  // ✅ override ONLY for fileManager
-  if (iconName === "fileManager") {
-    isActive = location.pathname === "/fileManager";
-  }
+        // ✅ override ONLY for fileManager
+        if (iconName === "fileManager") {
+            isActive = location.pathname === "/fileManager";
+        }
 
-  return `w-10 h-9 flex items-center justify-center rounded-[7px] cursor-pointer ${
-    isActive ? "border border-black rounded-[9px]" : ""
-  }`;
-};
+        return `w-10 h-10 flex items-center justify-center rounded-[7px] cursor-pointer ${isActive ? "border border-black rounded-[9px]" : ""
+            }`;
+    };
 
     return (
         <div
@@ -63,19 +62,19 @@ export default function LoginNavbarIcon({ onNewChat, onToggleHistory, onFileMana
                     onFileManager?.();
                 }}
             >
-                <img src={folder_img} alt="secondary" className="w-20 h-19 object-contain" />
+                <img src={folder_img} alt="secondary" className="w-18 h-16 object-contain" />
             </div>
 
             {/* History */}
             <div
                 className={iconWrapperClass("history")}
                 onClick={() => {
-                   
+
                     // navigate("/chat-history");
                     onToggleHistory?.();
                 }}
             >
-                <img src={recent} alt="history" className="w-8 h-7 object-contain" />
+                <img src={recent} alt="history" className="w-7 h-6 object-contain" />
             </div>
         </div>
     );

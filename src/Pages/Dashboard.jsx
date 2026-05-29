@@ -9,6 +9,8 @@ import { useAuth } from '../context/AuthContext';
 const Dashboard = () => {
   const location = useLocation();
 
+  const isFileMode = location.state?.fileHistoryMode && location.state?.file;
+  const isGlobalMode = location.state?.globalHistory;
 
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -38,7 +40,15 @@ const Dashboard = () => {
     }
   }, []); // only on mount
 
-  
+  useEffect(() => {
+  if (isGlobalMode) {
+    setSelectedFile(null); // clear file context
+  }
+}, [isGlobalMode]);
+
+
+
+
 
 
   //  Simply receive question + answer from AskQuestion component
@@ -56,7 +66,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className='flex h-screen overflow-hidden'>
+    <div className='flex h-screen max-h-screen overflow-hidden relative'>
       <div className='w-16 border-r shrink-0 overflow-y-auto'>
         <div className='py-3 px-2'>
           <LoginNavbarIcon
@@ -73,7 +83,7 @@ const Dashboard = () => {
             onFileManager={() => {
               setShowHistory(false);
               //setActiveIcon("fileManager");   // ✅ ADD THIS
-              
+
               navigate("/fileManager");             // (or whatever your route is)
             }}
             activeIcon={activeIcon}
@@ -82,7 +92,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${showHistory ? 'pl-20 pr-0' : 'px-10'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${showHistory ? 'pl-78' : 'px-10'}`}>
         <LoginNavbarAsk
           onAskQuestion={handleAskQuestion}
           question={question}
@@ -100,7 +110,7 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className='w-30 shrink-0'>
+      <div className='absolute top-0 right-0 w-30 z-10'>
         <div className='px-4 py-2'>
           <LoginNavbarProfile />
         </div>

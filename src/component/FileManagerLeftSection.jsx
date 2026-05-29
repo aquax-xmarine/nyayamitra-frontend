@@ -714,7 +714,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                                                 setContextMenu({ ...contextMenu, visible: false });
                                             }}
                                         >
-                                            <img src={files_img} alt="upload" className="w-3 h-3 object-contain" />
+                                            <img src={files_img} alt="upload" className="w-4 h-4 object-contain" />
                                             <span>Upload Files</span>
                                         </button>
 
@@ -797,7 +797,7 @@ export default function FileManagerLeftSection({ width, onSelectContainer, selec
                                                         setContextMenu({ ...contextMenu, visible: false });
                                                     }}
                                                 >
-                                                    <img src={trash_icon} alt="delete" className="w-3 h-3 object-contain" />
+                                                    <img src={trash_icon} alt="delete" className="w-4 h-4 object-contain" />
                                                     <span>Delete Subcollection</span>
 
                                                 </button>

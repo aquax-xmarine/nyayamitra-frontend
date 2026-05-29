@@ -204,7 +204,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            title: currentQuestion.slice(0, 50),
+            title: 'New Chat',
             document_id: activeContainerId
           })
         });
@@ -261,6 +261,19 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
           formData.append('files', reconstructed);
         }
       }
+
+      const recentHistory = messages.slice(-4); // last 4 messages
+
+      formData.append(
+        'history',
+        JSON.stringify(
+          recentHistory.map(m => ({
+            question: m.question,
+            answer: m.answer
+          }))
+        )
+      );
+
       const response = await fetch(`${API_URL}/api/ask`, {
         method: 'POST',
         credentials: 'include',
@@ -277,7 +290,12 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: currentQuestion, answer: answerText, file_id: fileId })
+        body: JSON.stringify({
+          question: currentQuestion,
+          answer: answerText,
+          file_id: fileId,
+          suggested_title: data.suggested_title || null  // add this
+        })
       });
       const msgData = await msgRes.json();
       const messageId = msgData.id;
@@ -330,7 +348,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
       <div>
         <h1 className="text-xl font-regular text-gray-800 py-5 leading-none">NYAYAMITRA</h1>
         {fileHistoryMode && historyFile && (
-          <div className="pl-70 pr-50 mb-2">
+          <div className="pl-50 pr-50 mb-2">
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
               <img src={law} alt="law" className="w-4 h-4" />
               <p className="text-xs text-slate-500">
@@ -341,7 +359,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
         )}
       </div>
 
-      <div className="flex-1 overflow-auto pl-70 pr-50 custom-scrollbar">
+      <div className="flex-1 overflow-auto pl-50 pr-50 custom-scrollbar">
 
         {messages.map((msg, index) => (
           <div key={index}>
@@ -453,7 +471,7 @@ const AskQuestion = ({ onAskQuestion, question, answer, loading, error, initialF
       </div>
 
       {!fileHistoryMode && (
-        <form onSubmit={handleSubmit} className="mt-auto py-4 pl-70 pr-50">
+        <form onSubmit={handleSubmit} className="mt-auto py-4 pl-50 pr-50">
           <div className="flex items-end gap-2 border-2 border-gray-300 rounded-3xl p-2 focus-within:border-black">
 
             <button
